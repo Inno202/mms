@@ -49,6 +49,8 @@ import hashlib as _hashlib
 # never pair a new page with an old cached stylesheet.
 ASSET_V = _hashlib.sha1((OUT / "css/site.css").read_bytes() + (OUT / "js/site.js").read_bytes()).hexdigest()[:10]
 
+ICON_V = _hashlib.sha1((OUT / "img/favicon.png").read_bytes()).hexdigest()[:8]
+
 def head(title, desc, page):
     full = title if page == "index.html" else f"{title} | Mbuso Management Solutions"
     return f"""<!doctype html>
@@ -66,8 +68,10 @@ def head(title, desc, page):
 <meta property="og:description" content="{escape(desc)}">
 <meta property="og:type" content="website">
 <meta property="og:image" content="img/it-4.webp">
-<link rel="icon" href="img/favicon.png" type="image/png">
-<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="icon" href="img/favicon.ico?v={ICON_V}" sizes="any">
+<link rel="icon" href="img/favicon-32.png?v={ICON_V}" type="image/png" sizes="32x32">
+<link rel="icon" href="img/favicon.png?v={ICON_V}" type="image/png" sizes="64x64">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png?v={ICON_V}">
 <link rel="preload" href="fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/site.css?v={ASSET_V}">
