@@ -77,7 +77,7 @@ def head(title, desc, page):
 <link rel="stylesheet" href="css/site.css?v={ASSET_V}">
 <script src="js/site.js?v={ASSET_V}" defer></script>
 </head>
-<body>
+<body id="top">
 <a class="skip-link" href="#main">Skip to content</a>
 """
 
@@ -113,45 +113,29 @@ def header(page):
 def footer():
     return f"""</main>
 <footer class="site-footer on-dark">
-  <div class="wrap footer-top">
-    <div class="footer-brand">
-      <img src="img/logo-white-360.png" width="180" height="105" alt="Mbuso Management Solutions">
-      <p>We facilitate sustainable growth by delivering industrialisation solutions that integrate human development, economic empowerment and innovative technologies.</p>
-      <div class="social">
-        <a href="{FB}" target="_blank" rel="noopener noreferrer" aria-label="Facebook (opens in a new tab)">{ic("facebook")}</a>
-        <a href="{IG}" target="_blank" rel="noopener noreferrer" aria-label="Instagram (opens in a new tab)">{ic("instagram")}</a>
-      </div>
-    </div>
-    <div>
-      <h2>Explore</h2>
-      <ul>
-        <li><a href="about.html">About us</a></li>
+  <div class="wrap footer-main">
+    <a class="footer-logo" href="index.html" aria-label="Mbuso Management Solutions home"><img src="img/logo-white-360.png" width="180" height="105" alt="Mbuso Management Solutions"></a>
+    <h2 class="sr-only">Site links</h2>
+    <nav aria-label="Footer">
+      <ul class="footer-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
         <li><a href="services.html">Services</a></li>
-        <li><a href="services.html#accreditations">Accreditations</a></li>
-        <li><a href="hub.html">Itireleng Hub</a></li>
-        <li><a href="impact.html">Impact and CSI</a></li>
+        <li><a href="hub.html">The Hub</a></li>
+        <li><a href="impact.html">Impact</a></li>
         <li><a href="learnerships.html">Learnerships</a></li>
+        <li><a href="contact.html">Contact</a></li>
       </ul>
-    </div>
-    <div>
-      <h2>Services</h2>
-      <ul>
-        <li><a href="services.html#training">Training and development</a></li>
-        <li><a href="services.html#industrial">Industrial operations</a></li>
-        <li><a href="services.html#consulting">Strategy and consulting</a></li>
-      </ul>
-    </div>
-    <div>
-      <h2>Contact</h2>
-      <ul>
-        <li><a href="tel:{PHONE_TEL}" class="num">{PHONE_DISPLAY}</a></li>
-        <li><a href="mailto:{EMAIL}">{EMAIL}</a></li>
-        <li><span>Tijger Valley Office Park #15,<br>7 Pony Street, Silverlakes,<br>Pretoria East, <span class="num">0084</span></span></li>
-      </ul>
+    </nav>
+    <p class="footer-contact"><a class="num" href="tel:{PHONE_TEL}">{PHONE_DISPLAY}</a><span aria-hidden="true">·</span><a href="mailto:{EMAIL}">{EMAIL}</a><span aria-hidden="true">·</span><span>Silverlakes, Pretoria East</span></p>
+    <div class="social">
+      <a href="{FB}" target="_blank" rel="noopener noreferrer" aria-label="Facebook (opens in a new tab)">{ic("facebook")}</a>
+      <a href="{IG}" target="_blank" rel="noopener noreferrer" aria-label="Instagram (opens in a new tab)">{ic("instagram")}</a>
     </div>
   </div>
   <div class="wrap footer-bottom">
-    <p>&copy; <span class="num" data-year>2026</span> Mbuso Management Solutions (Pty) Ltd. Reg. no. <span class="num">2012/074900/07</span>.</p>
+    <p>&copy; <span class="num" data-year>2026</span> Mbuso Management Solutions (Pty) Ltd</p>
+    <a class="back-top" href="#top">Back to top</a>
     <ul>
       <li><a href="legal.html#privacy">Privacy</a></li>
       <li><a href="legal.html#terms">Terms</a></li>
@@ -280,7 +264,16 @@ dots_html = "".join(
     for i in range(len(SLIDES)))
 
 home = f"""<section class="hero" data-slideshow aria-roledescription="carousel" aria-label="Mbuso Management Solutions at work">
+  <div class="hero-media">
   <ul class="slides">{slides_html}</ul>
+  <div class="hero-foot">
+    <p class="slide-caption" aria-live="polite">{escape(SLIDES[0][2])}</p>
+    <div class="slide-rail">
+      <div class="dots" role="group" aria-label="Choose a photo">{dots_html}</div>
+      <button class="icon-btn pause-btn" type="button" aria-label="Pause slideshow">{ic("pause", "i-pause")}{ic("play", "i-play").replace("<svg", "<svg hidden")}</button>
+    </div>
+  </div>
+  </div>
   <div class="wrap hero-inner">
     <div class="hero-panel on-dark">
       <div class="hero-rise">
@@ -291,13 +284,6 @@ home = f"""<section class="hero" data-slideshow aria-roledescription="carousel" 
           <a class="btn btn-light" href="services.html">Explore our services {ic("arrow", "btn-arrow")}</a>
           <a class="btn btn-outline-light" href="hub.html">Visit the Hub</a>
         </div>
-      </div>
-    </div>
-    <div class="hero-foot">
-      <p class="slide-caption" aria-live="polite">{escape(SLIDES[0][2])}</p>
-      <div class="slide-rail">
-        <div class="dots" role="group" aria-label="Choose a photo">{dots_html}</div>
-        <button class="icon-btn pause-btn" type="button" aria-label="Pause slideshow">{ic("pause", "i-pause")}{ic("play", "i-play").replace("<svg", "<svg hidden")}</button>
       </div>
     </div>
   </div>
