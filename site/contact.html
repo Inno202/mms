@@ -12,6 +12,8 @@
 <meta property="og:title" content="Contact | Mbuso Management Solutions">
 <meta property="og:description" content="Contact Mbuso Management Solutions in Pretoria East: telephone 086 102 2020, email mail@mbusoms.co.za.">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="Mbuso Management Solutions">
+<meta property="og:locale" content="en_ZA">
 <meta property="og:image" content="img/it-4.webp">
 <link rel="icon" href="img/favicon.ico?v=bb0bf100" sizes="any">
 <link rel="icon" href="img/favicon-32.png?v=bb0bf100" type="image/png" sizes="32x32">
@@ -19,8 +21,8 @@
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png?v=bb0bf100">
 <link rel="preload" href="fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/site.css?v=7b4030fcd7">
-<script src="js/site.js?v=7b4030fcd7" defer></script>
+<link rel="stylesheet" href="css/site.css?v=1fe306c3c3">
+<script src="js/site.js?v=1fe306c3c3" defer></script>
 </head>
 <body id="top">
 <a class="skip-link" href="#main">Skip to content</a>
@@ -71,7 +73,8 @@
       </ul>
     </div>
     <div class="panel form-panel reveal">
-      <form class="form" id="contact-form" novalidate>
+      <form class="form" id="contact-form" action="send.php" method="post" accept-charset="UTF-8">
+        <input type="hidden" name="form" value="contact"><input type="hidden" name="t" value="">
         <div class="form-grid">
           <div><label class="field-label" for="name">Full name</label><input class="field" id="name" name="name" type="text" autocomplete="name" maxlength="80" required aria-describedby="name-error"><p class="field-error" id="name-error"></p></div>
           <div><label class="field-label" for="phone">Phone <span class="opt">(optional)</span></label><input class="field num" id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="e.g. 082 123 4567" aria-describedby="phone-error"><p class="field-error" id="phone-error"></p></div>
@@ -82,11 +85,12 @@
         </div>
         <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
         <div>
-          <label class="consent" for="consent"><input type="checkbox" id="consent" name="consent" aria-describedby="consent-error"><span>I agree that Mbuso Management Solutions may use these details to reply to my enquiry, as set out in the <a class="link" href="legal.html#privacy">privacy policy</a>.</span></label>
+          <label class="consent" for="consent"><input type="checkbox" id="consent" name="consent" value="yes" required aria-describedby="consent-error"><span>I agree that Mbuso Management Solutions may use these details to reply to my enquiry, as set out in the <a class="link" href="legal.html#privacy">privacy policy</a>.</span></label>
           <p class="field-error" id="consent-error"></p>
         </div>
-        <button class="btn btn-primary btn-block" type="submit">Prepare my email <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
-        <p class="field-help center mt-0">Your email app opens with the message ready to send. Nothing is stored on this website.</p>
+        <button class="btn btn-primary btn-block" type="submit">Send message <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+        <p class="field-help center mt-0">Your message goes straight to our team by email.</p>
+        <div class="form-status" role="status" aria-live="polite" hidden></div>
       </form>
     </div>
   </div>

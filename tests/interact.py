@@ -71,7 +71,7 @@ async def main():
         pg.on("framenavigated", lambda f: navs.append(f.url))
         await pg.click("button[type=submit]"); await pg.wait_for_timeout(1200)
         toast=await pg.evaluate("[...document.querySelectorAll('.toast span')].map(t=>t.textContent).join(' | ')")
-        ok("valid submit hands off to email app", "ready in your email app" in toast, toast[:90])
+        ok("no form handler (static host): falls back to email app", "ready in your email app" in toast, toast[:90])
         # learnerships form
         await pg.goto(BASE+"learnerships.html", wait_until="networkidle")
         cta=await pg.get_attribute(".header-cta","href"); cur=await pg.get_attribute(".header-cta","aria-current")
@@ -87,7 +87,7 @@ async def main():
         await pg.fill("#i-email",""); await pg.check("#i-consent")
         await pg.click("#interest-form button[type=submit]"); await pg.wait_for_timeout(1200)
         toast=await pg.evaluate("[...document.querySelectorAll('.toast span')].map(t=>t.textContent).join(' | ')")
-        ok("valid registration hands off to email app", "ready in your email app" in toast, "")
+        ok("registration falls back to email app on a static host", "ready in your email app" in toast, "")
         # back button closes the photo viewer before leaving the page
         await pg.goto(BASE+"impact.html", wait_until="networkidle")
         await pg.click(".zoomable >> nth=0"); await pg.wait_for_timeout(400)
@@ -100,11 +100,17 @@ async def main():
         cnt=await pg.text_content("#message-count")
         ok("message counter updates", cnt.strip()=="17 / 2000", cnt)
         await pg.fill("#name","Thandi Mokoena"); await pg.fill("#email","thandi@example.co.za"); await pg.select_option("#topic","Strategy and consulting"); await pg.check("#consent")
-        await pg.click("#contact-form button[type=submit]"); await pg.wait_for_timeout(100)
+        async def slow(route):   # hold the send for a moment, as a real mail server would
+            await asyncio.sleep(0.6); await route.fulfill(status=200, content_type="application/json", body='{"ok":true}')
+        await pg.route("**/send.php", slow)
+        await pg.click("#contact-form button[type=submit]"); await pg.wait_for_timeout(150)
         busy=await pg.evaluate("(()=>{const b=document.querySelector('#contact-form button[type=submit]');return [b.disabled, !!b.querySelector('.spinner[role=status][aria-label]')]})()")
         ok("submit shows spinner and disables button", busy==[True, True], str(busy))
         await pg.wait_for_timeout(900)
         done=await pg.evaluate("(()=>{const b=document.querySelector('#contact-form button[type=submit]');return [b.disabled, !!b.querySelector('.spinner')]})()")
+        sent=await pg.evaluate("(()=>{const s=document.querySelector('#contact-form .form-status');return [s.hidden, s.className, document.getElementById('name').value]})()")
+        ok("successful send shows confirmation and clears the form", sent==[False,"form-status is-ok",""], str(sent))
+        await pg.unroute("**/send.php")
         ok("button re-enabled afterwards", done==[False, False], str(done))
         # deferred slides load only when near
         await pg.goto(BASE+"index.html", wait_until="networkidle")

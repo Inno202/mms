@@ -3,12 +3,37 @@
 RewriteEngine On
 RewriteCond %{HTTPS} !=on
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# One address for Google: mbusoms.co.za goes to www.mbusoms.co.za
+RewriteCond %{HTTP_HOST} ^mbusoms\.co\.za(:[0-9]+)?$ [NC]
+RewriteRule ^ https://www.mbusoms.co.za%{REQUEST_URI} [L,R=301]
+
+# The new site's home page wins over the old index.php
+DirectoryIndex index.html index.php
+
+# Old website addresses go to their new pages (keeps bookmarks and Google links working)
+RewriteRule ^index\.php$ / [R=301,L,NC]
+RewriteRule ^(about\.php|about|background|facility\.php)/?$ /about.html [R=301,L,NC]
+RewriteRule ^(services\.php|services|work|training|training\.html|consulting|consulting\.html|motivation|motivation\.html)/?$ /services.html [R=301,L,NC]
+RewriteRule ^(corporate\.php|gallery|gallery\.php)/?$ /impact.html [R=301,L,NC]
+RewriteRule ^(contact\.php|contact)/?$ /contact.html [R=301,L,NC]
+RewriteRule ^(carrer|career|careers|register/customer_registration\.php)/?$ /learnerships.html [R=301,L,NC]
 
 ErrorDocument 404 /404.html
 Options -Indexes
 
+# The form settings file is read by send.php only, never served
+<Files "form-config.php">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</Files>
+
 <IfModule mod_headers.c>
-  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  Header always set Strict-Transport-Security "max-age=31536000"
   Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; font-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'none'; upgrade-insecure-requests"
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"

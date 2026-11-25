@@ -579,3 +579,12 @@ textarea.field { line-height: 1.75; resize: vertical; min-height: 7.5rem; }
     right: calc(max(0px, (100% - 80rem) / 2) + var(--gutter));
   }
 }
+
+/* Form result shown under the button (sent, or why it could not be sent) */
+.form-status { margin-top: 0.9rem; padding: 0.8rem 1rem; border-radius: 12px; font-size: var(--text-sm); line-height: 1.5; }
+.form-status[hidden] { display: none; }
+.form-status.is-ok { background: #E8F3EB; color: #1E5A31; }
+.form-status.is-error { background: #F8E9EA; color: #7A1C23; }
+
+/* The only Textile Hub photo is small (445px); keep it near its real size so it stays sharp */
+.frame-cap { max-width: 30rem; margin-inline: auto; }

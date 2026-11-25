@@ -1,9 +1,15 @@
 """Builds the static Mbuso Management Solutions proposal site into ../site.
 Shared header, footer and icons live here so every page stays consistent."""
+import os, json
 from pathlib import Path
 from html import escape
 
-OUT = Path(__file__).resolve().parent.parent / "site"
+# MBUSO_LIVE=1 builds the official version for www.mbusoms.co.za (indexable, canonical
+# URLs, sitemap). The default build is the proposal preview, kept out of search engines.
+OUT = Path(os.environ.get("MBUSO_OUT") or Path(__file__).resolve().parent.parent / "site")
+LIVE = os.environ.get("MBUSO_LIVE") == "1"
+SITE_URL = "https://www.mbusoms.co.za/"
+NOINDEX = {"404.html", "thanks.html"}
 
 # Lucide-style icons: one family, 2px stroke.
 P = {
@@ -51,6 +57,28 @@ ASSET_V = _hashlib.sha1((OUT / "css/site.css").read_bytes() + (OUT / "js/site.js
 
 ICON_V = _hashlib.sha1((OUT / "img/favicon.png").read_bytes()).hexdigest()[:8]
 
+ORG_LD = {
+    "@context": "https://schema.org", "@type": "Organization",
+    "name": "Mbuso Management Solutions (Pty) Ltd", "alternateName": "MMS",
+    "url": SITE_URL, "logo": SITE_URL + "img/logo.png",
+    "email": "mail@mbusoms.co.za", "telephone": "+27 86 102 2020", "foundingDate": "2003",
+    "address": {"@type": "PostalAddress", "addressLocality": "Silverlakes, Pretoria East", "addressRegion": "Gauteng", "addressCountry": "ZA"},
+    "sameAs": ["https://www.facebook.com/dkstrategist/", "https://www.instagram.com/mbusomanagementsolutions/"],
+}
+
+def seo(page):
+    """Search-engine tags: the live build is indexable with canonical URLs; the preview is not."""
+    if not LIVE or page in NOINDEX:
+        out = '<meta name="robots" content="noindex, nofollow">\n'
+        if LIVE and page == "404.html":
+            out = '<base href="/">\n' + out   # 404s can be served from any depth
+        return out
+    url = SITE_URL if page == "index.html" else SITE_URL + page
+    out = f'<meta name="robots" content="index, follow">\n<link rel="canonical" href="{url}">\n<meta property="og:url" content="{url}">\n'
+    if page == "index.html":
+        out += '<script type="application/ld+json">' + json.dumps(ORG_LD, separators=(",", ":")) + '</script>\n'
+    return out
+
 def head(title, desc, page):
     full = title if page == "index.html" else f"{title} | Mbuso Management Solutions"
     return f"""<!doctype html>
@@ -60,14 +88,15 @@ def head(title, desc, page):
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<meta name="robots" content="noindex, nofollow">
-<title>{escape(full)}</title>
+{seo(page)}<title>{escape(full)}</title>
 <meta name="description" content="{escape(desc)}">
 <meta name="theme-color" content="#FFFFFF">
 <meta property="og:title" content="{escape(full)}">
 <meta property="og:description" content="{escape(desc)}">
 <meta property="og:type" content="website">
-<meta property="og:image" content="img/it-4.webp">
+<meta property="og:site_name" content="Mbuso Management Solutions">
+<meta property="og:locale" content="en_ZA">
+<meta property="og:image" content="{SITE_URL if LIVE else ""}img/it-4.webp">
 <link rel="icon" href="img/favicon.ico?v={ICON_V}" sizes="any">
 <link rel="icon" href="img/favicon-32.png?v={ICON_V}" type="image/png" sizes="32x32">
 <link rel="icon" href="img/favicon.png?v={ICON_V}" type="image/png" sizes="64x64">
@@ -552,7 +581,7 @@ services = page_hero("it-0.webp", "A learner working at a computer during traini
 
 <section class="section" id="industrial">
   <div class="wrap split split-wide-right">
-    <div class="deco reveal"><div class="frame ratio-4x3"><img src="img/textile-hub.webp" alt="Members of the Itireleng Textile Hub outside the factory" loading="lazy" width="445" height="334"></div></div>
+    <div class="deco reveal"><div class="frame ratio-4x3 frame-cap"><img src="img/textile-hub.webp" alt="Members of the Itireleng Textile Hub outside the factory" loading="lazy" width="445" height="334"></div></div>
     <div class="reveal">
       <span class="eyebrow">Pillar two</span>
       <h2 class="display h2">Industrial <span class="accent">operations</span></h2>
@@ -623,7 +652,7 @@ hub = page_hero("hub-model.webp", "3D model of the Itireleng Hub", "Itireleng Le
 
 <section class="section band">
   <div class="wrap split split-wide-right">
-    <div class="deco reveal"><div class="frame ratio-4x3"><img src="img/textile-hub.webp" alt="The Itireleng Textile Hub class of 2020 outside the factory" loading="lazy" width="445" height="334"></div></div>
+    <div class="deco reveal"><div class="frame ratio-4x3 frame-cap"><img src="img/textile-hub.webp" alt="The Itireleng Textile Hub class of 2020 outside the factory" loading="lazy" width="445" height="334"></div></div>
     <div class="reveal">
       <span class="eyebrow">Itireleng Textile Hub</span>
       <h2 class="display h2">A <span class="num">2&nbsp;000</span> m² factory built for <span class="accent">quality</span></h2>
@@ -765,7 +794,8 @@ contact = page_hero("ohs-21.webp", "Delegates around a table during training", "
       </ul>
     </div>
     <div class="panel form-panel reveal">
-      <form class="form" id="contact-form" novalidate>
+      <form class="form" id="contact-form" action="send.php" method="post" accept-charset="UTF-8">
+        <input type="hidden" name="form" value="contact"><input type="hidden" name="t" value="">
         <div class="form-grid">
           <div><label class="field-label" for="name">Full name</label><input class="field" id="name" name="name" type="text" autocomplete="name" maxlength="80" required aria-describedby="name-error"><p class="field-error" id="name-error"></p></div>
           <div><label class="field-label" for="phone">Phone <span class="opt">(optional)</span></label><input class="field num" id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="e.g. 082 123 4567" aria-describedby="phone-error"><p class="field-error" id="phone-error"></p></div>
@@ -776,11 +806,12 @@ contact = page_hero("ohs-21.webp", "Delegates around a table during training", "
         </div>
         <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
         <div>
-          <label class="consent" for="consent"><input type="checkbox" id="consent" name="consent" aria-describedby="consent-error"><span>I agree that Mbuso Management Solutions may use these details to reply to my enquiry, as set out in the <a class="link" href="legal.html#privacy">privacy policy</a>.</span></label>
+          <label class="consent" for="consent"><input type="checkbox" id="consent" name="consent" value="yes" required aria-describedby="consent-error"><span>I agree that Mbuso Management Solutions may use these details to reply to my enquiry, as set out in the <a class="link" href="legal.html#privacy">privacy policy</a>.</span></label>
           <p class="field-error" id="consent-error"></p>
         </div>
-        <button class="btn btn-primary btn-block" type="submit">Prepare my email {ic("arrow", "btn-arrow")}</button>
-        <p class="field-help center mt-0">Your email app opens with the message ready to send. Nothing is stored on this website.</p>
+        <button class="btn btn-primary btn-block" type="submit">Send message {ic("arrow", "btn-arrow")}</button>
+        <p class="field-help center mt-0">Your message goes straight to our team by email.</p>
+        <div class="form-status" role="status" aria-live="polite" hidden></div>
       </form>
     </div>
   </div>
@@ -881,7 +912,8 @@ learn = page_hero("ohs-13.webp", "A learner practising CPR on a training mannequ
       <div class="note mt-2">{ic("info")}<p>Be careful of anyone who asks for money to secure a learnership. If someone asks for payment in our name, check with us first on <span class="num">{PHONE_DISPLAY}</span>.</p></div>
     </div>
     <div class="panel form-panel reveal">
-      <form class="form" id="interest-form" novalidate>
+      <form class="form" id="interest-form" action="send.php" method="post" accept-charset="UTF-8">
+        <input type="hidden" name="form" value="learnership"><input type="hidden" name="t" value="">
         <div class="form-grid">
           <div><label class="field-label" for="i-name">Full name</label><input class="field" id="i-name" name="name" type="text" autocomplete="name" maxlength="80" required aria-describedby="i-name-error"><p class="field-error" id="i-name-error"></p></div>
           <div><label class="field-label" for="i-phone">Cellphone</label><input class="field num" id="i-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="e.g. 082 123 4567" required aria-describedby="i-phone-error"><p class="field-error" id="i-phone-error"></p></div>
@@ -893,11 +925,12 @@ learn = page_hero("ohs-13.webp", "A learner practising CPR on a training mannequ
         </div>
         <div class="hp" aria-hidden="true"><label for="i-website">Leave this empty</label><input id="i-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
         <div>
-          <label class="consent" for="i-consent"><input type="checkbox" id="i-consent" name="consent" aria-describedby="i-consent-error"><span>I agree that Mbuso Management Solutions may keep these details to contact me about learnerships, as set out in the <a class="link" href="legal.html#privacy">privacy policy</a>.</span></label>
+          <label class="consent" for="i-consent"><input type="checkbox" id="i-consent" name="consent" value="yes" required aria-describedby="i-consent-error"><span>I agree that Mbuso Management Solutions may keep these details to contact me about learnerships, as set out in the <a class="link" href="legal.html#privacy">privacy policy</a>.</span></label>
           <p class="field-error" id="i-consent-error"></p>
         </div>
-        <button class="btn btn-primary btn-block" type="submit">Prepare my registration {ic("arrow", "btn-arrow")}</button>
-        <p class="field-help center mt-0">Your email app opens with your details ready to send to {EMAIL}. Nothing is stored on this website.</p>
+        <button class="btn btn-primary btn-block" type="submit">Register my interest {ic("arrow", "btn-arrow")}</button>
+        <p class="field-help center mt-0">Your details go straight to our training team by email.</p>
+        <div class="form-status" role="status" aria-live="polite" hidden></div>
       </form>
     </div>
   </div>
@@ -910,7 +943,7 @@ legal = f"""<section class="section">
   <div class="wrap wrap-read">
     <span class="eyebrow">Legal</span>
     <h1 class="display h1-plain">Privacy, terms and <span class="accent">cookies</span></h1>
-    <p class="muted mt-1">Last updated 24 November <span class="num">2026</span>. Draft for review by Mbuso Management Solutions before publication.</p>
+    <p class="muted mt-1">Last updated 25 November <span class="num">2026</span>.{"" if LIVE else " Draft for review by Mbuso Management Solutions before publication."}</p>
     <nav class="even-row even-min-9 mt-2" aria-label="Legal sections">
       <a class="btn btn-outline" href="#privacy">Privacy policy</a>
       <a class="btn btn-outline" href="#terms">Terms of use</a>
@@ -920,20 +953,22 @@ legal = f"""<section class="section">
       <h2 id="privacy">Privacy policy</h2>
       <p>Mbuso Management Solutions (Pty) Ltd (registration number <span class="num">2012/074900/07</span>) respects your privacy and processes personal information in line with the Protection of Personal Information Act, <span class="num">2013</span> (POPIA).</p>
       <h3>What this website collects</h3>
-      <p>This website does not collect or store personal information itself. It has no accounts, analytics, advertising or tracking.</p>
-      <p>The contact form checks your details in your browser and then opens your own email app with a message addressed to {EMAIL}. Nothing is sent until you press send in your email app. When you do, we receive the details you chose to include: your name, organisation, email address, phone number and message.</p>
-      <p>The learnership registration form works the same way. If you send it, we receive your name, cellphone number, email address if given, town, field of interest, highest qualification and any message. We keep these details only to contact you about suitable learnerships, and you may ask us to delete them at any time.</p>
+      <p>This website has no accounts, analytics, advertising or tracking. It collects personal information only when you send one of its two forms.</p>
+      <p><strong>Contact form.</strong> When you press send, the details you enter (your name, organisation, email address, phone number, topic and message) are checked by our web server and emailed to {EMAIL}. The website does not keep a copy in a database.</p>
+      <p><strong>Learnership registration form.</strong> When you press send, your name, cellphone number, email address if given, town, field of interest, highest qualification and any message are emailed to our training team in the same way. We keep these details only to contact you about suitable learnerships and training intakes, and you may ask us to delete them at any time.</p>
+      <p>To stop automated spam, the server keeps a short-lived count of form submissions linked to a scrambled (hashed) version of your internet address, never the address itself. The count is deleted after <span class="num">15</span> minutes. Our web host also keeps standard server logs for security.</p>
+      <p>If the form cannot reach our server, it offers to open your own email app with the message ready instead. Nothing is sent until you press send there.</p>
       <h3>How we use your information</h3>
       <ul>
         <li>To reply to your enquiry and arrange the services you ask about.</li>
         <li>To contact you about learnerships and training intakes, if you registered your interest.</li>
         <li>To keep a record of our correspondence with you.</li>
       </ul>
-      <p>We do not sell your information or use it for marketing without your consent.</p>
+      <p>We do not sell your information or use it for marketing without your consent. We keep correspondence only for as long as we need it for these purposes or as the law requires.</p>
       <h3>Third parties</h3>
-      <p>Emails are handled by our email provider. Links to Facebook, Instagram, Google Maps and news websites take you to those services, which have their own privacy policies.</p>
+      <p>Form messages and emails are handled by our website host and email provider. Links to Facebook, Instagram, Google Maps and news websites take you to those services, which have their own privacy policies.</p>
       <h3>Your rights</h3>
-      <p>You may ask what personal information we hold about you, ask us to correct or delete it, or object to how we use it. Contact us at <a class="link" href="mailto:{EMAIL}">{EMAIL}</a>. You may also lodge a complaint with the Information Regulator of South Africa.</p>
+      <p>You may ask what personal information we hold about you, ask us to correct or delete it, or object to how we use it. Contact our Information Officer, the Chief Executive Officer, at <a class="link" href="mailto:{EMAIL}">{EMAIL}</a> or <span class="num">086 102 2020</span>. You may also lodge a complaint with the Information Regulator of South Africa.</p>
 
       <h2 id="terms">Terms of use</h2>
       <p>By using this website you agree to these terms.</p>
@@ -965,3 +1000,23 @@ notfound = f"""<section class="section">
 </section>
 """
 write("404.html", "Page not found", "This page could not be found.", notfound)
+
+# Thank-you page for visitors whose browser sends the form without JavaScript
+thanks = f"""<section class="section">
+  <div class="wrap">
+    <span class="eyebrow">Message sent</span>
+    <h1 class="display h1-plain">Thank you, we have your <span class="accent">details</span></h1>
+    <p class="lead mt-1">Your form has been emailed to our team. We will be in touch using the details you gave us.</p>
+    <div class="even-cols fit-md mt-2"><a class="btn btn-primary" href="index.html">Back to the home page {ic("arrow", "btn-arrow")}</a><a class="btn btn-outline" href="services.html">See what we do</a></div>
+  </div>
+</section>
+"""
+write("thanks.html", "Thank you", "Your message has been sent to Mbuso Management Solutions.", thanks)
+
+if LIVE:
+    pages = ["index.html", "about.html", "services.html", "hub.html", "impact.html", "learnerships.html", "contact.html", "legal.html"]
+    urls = "".join(f"  <url><loc>{SITE_URL if p == 'index.html' else SITE_URL + p}</loc></url>\n" for p in pages)
+    (OUT / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls + '</urlset>\n', encoding="utf-8")
+    (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\nDisallow: /send.php\n\nSitemap: {SITE_URL}sitemap.xml\n", encoding="utf-8")
+    print("wrote sitemap.xml, robots.txt (live)")
+

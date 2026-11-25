@@ -18,13 +18,13 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
-SITE = ROOT / "site"
+SITE = Path(__import__("os").environ.get("MBUSO_TEST_SITE") or ROOT / "site")
 SHOTS = ROOT / "tests" / "shots"; SHOTS.mkdir(parents=True, exist_ok=True)
 OUTD = ROOT / "tests" / "out"; OUTD.mkdir(parents=True, exist_ok=True)
 AXE = (ROOT / "tests" / "vendor" / "axe.min.js").read_text()
 PORT = 8790
 BASE = f"http://127.0.0.1:{PORT}/"
-PAGES = ["index.html", "about.html", "services.html", "hub.html", "impact.html", "learnerships.html", "contact.html", "legal.html", "404.html"]
+PAGES = ["index.html", "about.html", "services.html", "hub.html", "impact.html", "learnerships.html", "contact.html", "legal.html", "404.html", "thanks.html"]
 WIDTHS = [(1280, 900, "1280"), (768, 1024, "768"), (390, 844, "390"), (360, 780, "360"), (640, 450, "zoom200")]
 SCALE_REM = [0.75, 0.875, 1.0, 1.125, 1.25, 1.5, 1.875, 2.25, 3.0, 3.75, 4.5]
 

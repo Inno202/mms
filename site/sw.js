@@ -1,7 +1,7 @@
 /* Mbuso Management Solutions — offline copy.
    Network first: visitors always get the newest page when online; the cached copy
    is used only when the network fails. Bump VERSION on each release. */
-const VERSION = "mbuso-2026-11-25";
+const VERSION = "mbuso-2026-11-25b";
 const CORE = ["./", "index.html", "about.html", "services.html", "hub.html", "impact.html", "learnerships.html", "contact.html", "legal.html", "404.html", "css/site.css", "js/site.js", "img/logo-360.png"];
 
 self.addEventListener("install", (event) => {

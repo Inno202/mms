@@ -181,9 +181,9 @@
     viewer.addEventListener("touchend", function (e) { if (vx === null) return; var dx = e.changedTouches[0].clientX - vx; vx = null; if (Math.abs(dx) > 50) load(at + (dx < 0 ? 1 : -1)); }, { passive: true });
   }
 
-  /* Forms: validate here for helpful messages, then hand the message to the visitor's
-     own email app. Nothing is sent to or stored on any server. */
-  function setupForm(form, RULES, prefix, consentMsg, compose) {
+  /* Forms: validate here for helpful messages, then post to send.php, which checks
+     everything again and emails it to MMS. Hosts without PHP fall back to the email app. */
+  function setupForm(form, RULES, prefix, consentMsg, compose, successMsg) {
     function setError(field, text) {
       var err = document.getElementById(field.id + "-error");
       field.setAttribute("aria-invalid", text ? "true" : "false");
@@ -206,31 +206,93 @@
     });
     var consent = form.querySelector('input[name="consent"]');
     var consentErr = consent ? document.getElementById(consent.id + "-error") : null;
+    var status = form.querySelector(".form-status");
+    var started = form.querySelector('input[name="t"]');
+    form.noValidate = true;                      // our own messages replace the browser's bubbles
+    if (started) started.value = String(Date.now());
+
+    function showStatus(kind, text) {
+      if (!status) return;
+      status.className = "form-status is-" + kind;
+      status.textContent = text;
+      status.hidden = false;
+    }
+    function done(btn, spin) {
+      btn.disabled = false; btn.removeAttribute("aria-busy");
+      if (spin && spin.parentNode) spin.remove();
+    }
+    function emailFallback(compose, get) {
+      // Hosts without the PHP handler (such as a static preview): hand over to the email app
+      var m = compose(get);
+      window.location.href = "mailto:mail@mbusoms.co.za?subject=" + encodeURIComponent(m.subject) + "&body=" + encodeURIComponent(m.body);
+      toast("Your message is ready in your email app. If it did not open, email mail@mbusoms.co.za directly.");
+    }
+
     form.addEventListener("submit", function (e) {
       e.preventDefault();
+      if (status) status.hidden = true;
       if (form.querySelector(".hp input").value) return; // a bot filled the hidden field
       var first = null;
       Object.keys(RULES).forEach(function (k) { var f = form.elements[k]; if (f && !check(f) && !first) first = f; });
       if (consent && !consent.checked) { consentErr.textContent = consentMsg; if (!first) first = consent; }
       else if (consentErr) consentErr.textContent = "";
       if (first) { first.focus(); toast("Please check the highlighted fields.", true); return; }
+
       var btn = form.querySelector("button[type=submit]");
       btn.disabled = true;
       btn.setAttribute("aria-busy", "true");
       var spin = document.createElement("span");
-      spin.className = "spinner"; spin.setAttribute("role", "status"); spin.setAttribute("aria-label", "Preparing your message");
+      spin.className = "spinner"; spin.setAttribute("role", "status"); spin.setAttribute("aria-label", "Sending your message");
       btn.appendChild(spin);
       var get = function (k) { return form.elements[k].value.trim(); };
-      var m = compose(get);
-      window.location.href = "mailto:mail@mbusoms.co.za?subject=" + encodeURIComponent(m.subject) + "&body=" + encodeURIComponent(m.body);
-      setTimeout(function () {
-        btn.disabled = false;
-        btn.removeAttribute("aria-busy");
-        if (spin.parentNode) spin.remove();
-        toast("Your message is ready in your email app. If it did not open, email mail@mbusoms.co.za directly.");
-      }, 600);
+
+      if (!window.fetch || !window.FormData) { done(btn, spin); emailFallback(compose, get); return; }
+      fetch(form.getAttribute("action"), { method: "POST", body: new FormData(form), headers: { "Accept": "application/json" }, credentials: "same-origin" })
+        .then(function (res) {
+          return res.json().catch(function () { return null; }).then(function (data) { return { res: res, data: data }; });
+        })
+        .then(function (r) {
+          done(btn, spin);
+          var data = r.data;
+          if (data && data.ok) {
+            form.reset();
+            if (started) started.value = String(Date.now());
+            form.querySelectorAll("[aria-invalid]").forEach(function (f) { f.setAttribute("aria-invalid", "false"); });
+            form.querySelectorAll("textarea[data-counter]").forEach(function (ta) { ta.dispatchEvent(new Event("input")); });
+            showStatus("ok", successMsg);
+            status && status.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            toast(successMsg);
+            return;
+          }
+          if (r.res.status === 422 && data && data.fields) {
+            var firstBad = null;
+            Object.keys(data.fields).forEach(function (k) {
+              var f = k === "consent" ? consent : form.elements[k];
+              if (!f) return;
+              if (k === "consent") { consentErr.textContent = consentMsg; }
+              else { var rule = RULES[k] || {}; setError(f, data.fields[k] === "too_long" ? "Please shorten this." : (rule.msg || "Please check this field.")); }
+              if (!firstBad) firstBad = f;
+            });
+            if (firstBad) firstBad.focus();
+            toast("Please check the highlighted fields.", true);
+            return;
+          }
+          if (r.res.status === 429) {
+            showStatus("error", "You have sent several messages in a short time. Please try again in 15 minutes, or call us on 086 102 2020.");
+            toast("Please wait a few minutes before sending again.", true);
+            return;
+          }
+          if (r.res.status === 502 || r.res.status === 403 || r.res.status === 413) {
+            showStatus("error", "Sorry, your message could not be sent. Please email mail@mbusoms.co.za or call 086 102 2020.");
+            toast("Your message could not be sent.", true);
+            return;
+          }
+          emailFallback(compose, get);   // 404/405: this host has no form handler
+        })
+        .catch(function () { done(btn, spin); emailFallback(compose, get); });
     });
   }
+
   var EMAIL_RE = /^[^\s@<>()]+@[^\s@<>()]+\.[^\s@<>()]{2,}$/;
   var PHONE_RE = /^[+0-9 ()-]{9,20}$/;
 
@@ -245,7 +307,7 @@
   }, "", "Please agree so we may use your details to reply.", function (get) {
     return { subject: "Website enquiry: " + get("topic"),
       body: "Name: " + get("name") + "\nOrganisation: " + (get("organisation") || "-") + "\nEmail: " + get("email") + "\nPhone: " + (get("phone") || "-") + "\n\n" + get("message") };
-  });
+  }, "Thank you. Your message has been sent to our team.");
 
   var interestForm = document.getElementById("interest-form");
   if (interestForm) setupForm(interestForm, {
@@ -259,7 +321,7 @@
   }, "i-", "Please agree so we may keep your details for learnerships.", function (get) {
     return { subject: "Learnership interest: " + get("field"),
       body: "Name: " + get("name") + "\nCellphone: " + get("phone") + "\nEmail: " + (get("email") || "-") + "\nTown: " + get("town") + "\nField of interest: " + get("field") + "\nHighest qualification: " + get("qualification") + "\n\n" + (get("message") || "") };
-  });
+  }, "Thank you. Your details have been sent to our training team.");
 
 
   /* Live length counters on long text ("120 / 2000"); maxlength stops typing at the limit */
@@ -274,6 +336,14 @@
   /* Offline copy: a service worker that always fetches the newest page first */
   if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol) && window.isSecureContext) {
     try { navigator.serviceWorker.register("sw.js").catch(function () {}); } catch (e) {}
+  }
+
+  /* Result passed back by send.php when JavaScript was off */
+  var qs = /[?&]status=(error|busy)/.exec(location.search);
+  var st = document.querySelector(".form-status");
+  if (qs && st) {
+    st.className = "form-status is-error"; st.hidden = false;
+    st.textContent = qs[1] === "busy" ? "You have sent several messages in a short time. Please try again in 15 minutes." : "Sorry, some details were missing or your message could not be sent. Please check the form, or email mail@mbusoms.co.za.";
   }
 
   /* Footer year */
