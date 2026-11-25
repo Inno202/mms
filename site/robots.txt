@@ -1,0 +1,3 @@
+# Proposal preview: keep out of search engines until approved.
+User-agent: *
+Disallow: /
