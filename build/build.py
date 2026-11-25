@@ -258,9 +258,9 @@ SLIDES = [
     ("matric-camp.webp", "Grade 12 learners in school uniform seated in a hall during a matric camp",
      "Grade 12 matric incubation camp, Dr Kenneth Kaunda District"),
     ("workshop-tables.webp", "Delegates seated at conference tables during a facilitated workshop",
-     "Strategy and leadership workshop"),
+     "Facilitated workshop session"),
     ("ohs-22.webp", "A learner practising CPR on a training mannequin while a facilitator watches",
-     "Practical first aid and CPR assessment"),
+     "CPR training, part of occupational health and safety training"),
 ]
 slides_html = "".join(
     f'<li class="slide{" is-active" if i == 0 else ""}" data-caption="{escape(c)}" aria-hidden="{"false" if i == 0 else "true"}">'
@@ -298,7 +298,7 @@ home = f"""<section class="hero" data-slideshow aria-roledescription="carousel" 
     <div class="trust-item"><strong>2003</strong><span>Founded, more than two decades of practice</span></div>
     <div class="trust-item"><strong>6</strong><span>Accrediting bodies: QCTO and five SETAs</span></div>
     <div class="trust-item"><strong>25</strong><span>Government, mining and corporate clients listed</span></div>
-    <div class="trust-item"><strong>1&nbsp;000</strong><span>Learners accommodated at the Itireleng Hub</span></div>
+    <div class="trust-item"><strong>1&nbsp;000</strong><span>People the Itireleng Hub can accommodate</span></div>
   </div></div>
 </section>
 
@@ -360,7 +360,7 @@ home = f"""<section class="hero" data-slideshow aria-roledescription="carousel" 
       <p class="lead mt-1">In Umuzimuhle, Orkney, we turned a derelict mining property into a skills, engineering and manufacturing campus.</p>
       <div class="facts mt-2">
         <div class="panel fact"><span class="fact-value">30</span><span class="fact-label">Classrooms</span></div>
-        <div class="panel fact"><span class="fact-value">1&nbsp;000</span><span class="fact-label">Beds for learners</span></div>
+        <div class="panel fact"><span class="fact-value">1&nbsp;000</span><span class="fact-label">People the Hub can accommodate</span></div>
         <div class="panel fact"><span class="fact-value">5</span><span class="fact-label">Industrial workshops</span></div>
         <div class="panel fact"><span class="fact-value">20</span><span class="fact-label">Offices</span></div>
       </div>
@@ -390,7 +390,7 @@ home = f"""<section class="hero" data-slideshow aria-roledescription="carousel" 
       <a class="text-link" href="impact.html">All impact stories {ic("arrow")}</a>
     </div>
     <div class="facts facts-4 reveal">
-      <div class="panel fact"><span class="fact-value">100+</span><span class="fact-label">Women and youth incubated at the Itireleng Textile Hub</span></div>
+      <div class="panel fact"><span class="fact-value">100</span><span class="fact-label">Women and youth signed up to the Itireleng Textile Hub</span></div>
       <div class="panel fact"><span class="fact-value">150</span><span class="fact-label">Learners from five municipalities in a SALGA water learnership</span></div>
       <div class="panel fact"><span class="fact-value">60</span><span class="fact-label">Township learners supported from Grade 9 to matric</span></div>
       <div class="panel fact"><span class="fact-value">2019</span><span class="fact-label">First Grade 12 matric camps hosted at the Hub</span></div>
@@ -432,7 +432,7 @@ write("index.html", "Mbuso Management Solutions | Strategy, Training and Industr
       "Mbuso Management Solutions is a black-owned strategy, training and industrialisation firm with a learning and manufacturing hub in Matlosana, North West.", home)
 
 # ------------------------------------------------------------------ ABOUT
-VALUES = [("Faith", "We trust that our work is on purpose and guided."),
+VALUES = [("Faith", "We trust and believe that our business is on purpose and is divinely guided and protected."),
           ("Integrity", "All we do is above board and rooted in self-respect."),
           ("Innovation", "We stay at the front of change and take our markets to new ways of thinking."),
           ("Excellence", "We deliver the highest quality and real value for money."),
@@ -459,7 +459,7 @@ about = page_hero("workshop-tables.webp", "Delegates at a facilitated workshop",
     </div>
     <div class="reveal">
       <p class="lead">Daddy Khuselo founded Mbuso Management Solutions in January <span class="num">2003</span> as a motivation, training and consulting company. Two decades later it is a strategic partner to government, state-owned enterprises, listed companies and communities.</p>
-      <p>Along the way we learned that motivation on its own does not change results. People need practical, accredited skills, and they need somewhere to use them. That is why we built the Itireleng Learning and Manufacturing Hub, where certified talent moves directly into our own industrial production lines.</p>
+      <p>Along the way we learned that motivation on its own does not change results. People need practical, accredited skills, and they need somewhere to use them. That is why we established the Itireleng Learning and Manufacturing Hub, where certified talent moves directly into our own industrial production lines.</p>
       <p>Our head office is in Pretoria, Gauteng. Our operations are anchored in Matlosana, Dr Kenneth Kaunda District, North West. We are a Premium Client of the Small Enterprise Development Agency, and the Industrial Development Corporation supports the equipping of the factories we run.</p>
     </div>
   </div>
@@ -526,7 +526,7 @@ write("about.html", "About us", "The story, mission, values and founder of Mbuso
 
 # ------------------------------------------------------------------ SERVICES
 ACC = [("QCTO", ["Occupational Certificate: Plumbing Hand (Artisan)", "Plumbing Hand (Assistant Plumber)", "Energy Efficiency", "Solar Hot Water Installation", "Occupational Health and Safety"]),
-       ("EW SETA", ["Hot Water Systems and Installation", "Water and Wastewater Treatment Operations", "Water and Wastewater Reticulation Services", "Cable Jointing", "Basic Electrician"]),
+       ("EW SETA", ["Hot Water Systems and Installation", "Water and Wastewater Treatment Operations Processes", "Water and Wastewater Reticulation Services", "Cable Jointing", "Basic Electrician"]),
        ("AgriSETA", ["Animal Production", "Plant Production", "Poultry Production", "Horticulture"]),
        ("FP&amp;M SETA", ["Clothing, Textile, Footwear and Leather Manufacturing", "Furniture Making"]),
        ("MICT SETA", ["End User Computing", "Systems Development", "Technical Support"]),
@@ -618,7 +618,7 @@ hub = page_hero("hub-model.webp", "3D model of the Itireleng Hub", "Itireleng Le
   <div class="wrap">
     <div class="facts facts-4 reveal">
       <div class="panel fact"><span class="fact-value">30</span><span class="fact-label">Classrooms</span></div>
-      <div class="panel fact"><span class="fact-value">1&nbsp;000</span><span class="fact-label">People accommodated</span></div>
+      <div class="panel fact"><span class="fact-value">1&nbsp;000</span><span class="fact-label">People the Hub can accommodate</span></div>
       <div class="panel fact"><span class="fact-value">5</span><span class="fact-label">Industrial workshops</span></div>
       <div class="panel fact"><span class="fact-value">2</span><span class="fact-label">Halls, plus kitchen and recreation facilities</span></div>
     </div>
@@ -643,8 +643,8 @@ hub = page_hero("hub-model.webp", "3D model of the Itireleng Hub", "Itireleng Le
     <div class="reveal">
       <span class="eyebrow">Grade 12 matric incubation camps</span>
       <h2 class="display h2">Thousands of matric learners hosted <span class="accent">since <span class="num">2019</span></span></h2>
-      <p class="lead mt-1">Our camps support the matric results of the Dr Kenneth Kaunda District, and the provincial Department of Education has recognised the Hub as a preferred camp venue.</p>
-      <p class="muted">Each camp creates temporary jobs and income for local SMMEs. We procure locally, from electrical materials and plumbing to mattresses, security and gardening services.</p>
+      <p class="lead mt-1">Our camps support the matric results of the Dr Kenneth Kaunda District, and the Department of Education has recognised the Hub as a preferred Grade 12 camp venue.</p>
+      <p class="muted">The camps have created more than 200 temporary jobs and income for more than 10 local SMMEs. We procure locally, from electrical materials and plumbing to mattresses, security and gardening services.</p>
     </div>
     <div class="deco reveal"><div class="frame ratio-3x2"><img src="img/matric-camp.webp" alt="Grade 12 learners in uniform during a matric camp session" loading="lazy" width="1368" height="912"></div></div>
   </div>
@@ -678,7 +678,7 @@ GAL = [("it-4.webp", "Learners during database management training", "Database m
        ("ohs-22.webp", "A learner performing CPR on a mannequin", "CPR assessment", ""),
        ("matric-camp.webp", "Matric learners in a hall during a camp", "Grade 12 matric incubation camp", "wide"),
        ("it-9.webp", "Learners working through course material at computers", "Database management training", ""),
-       ("workshop-room.webp", "A facilitator presenting in a conference room", "Strategy workshop", "")]
+       ("workshop-room.webp", "A facilitator presenting in a conference room", "Facilitated workshop", "")]
 gal_html = "".join(
     f'<a class="zoomable group{" wide" if w else ""}" href="img/{s}" data-viewer data-alt="{escape(a)}" data-caption="{escape(c)}" aria-label="Open photo: {escape(c)}">'
     f'<img class="photo-zoom" src="img/{s}" alt="{escape(a)}" loading="lazy"><span class="zoom-hint">{ic("expand")}</span></a>'
@@ -715,7 +715,7 @@ impact = page_hero("matric-camp.webp", "Matric learners during a camp", "Impact 
       <article class="panel panel-fill reveal">
         <span class="eyebrow">Itireleng Textile Hub</span>
         <h3 class="display h3">Women and youth in manufacturing</h3>
-        <p class="muted mt-1">Around 100 women and youth are incubated at the Textile Hub, working towards SETA qualifications while producing to SABS standards.</p>
+        <p class="muted mt-1">Around 100 women and youth are incubated at the Textile Hub, working towards SETA qualifications and learning to produce to SABS quality.</p>
       </article>
       <article class="panel panel-fill reveal">
         <span class="eyebrow">Water and energy skills</span>
@@ -797,7 +797,7 @@ write("contact.html", "Contact", "Contact Mbuso Management Solutions in Pretoria
 # ------------------------------------------------------------------ LEARNERSHIPS
 FIELDS = [
     ("Trades and energy", "QCTO and EW SETA", ["Plumbing Hand (Artisan and Assistant Plumber)", "Solar Hot Water Installation", "Hot Water Systems and Installation", "Energy Efficiency", "Basic Electrician", "Cable Jointing"]),
-    ("Water and wastewater", "EW SETA", ["Water and Wastewater Treatment Operations", "Water and Wastewater Reticulation Services"]),
+    ("Water and wastewater", "EW SETA", ["Water and Wastewater Treatment Operations Processes", "Water and Wastewater Reticulation Services"]),
     ("Agriculture", "AgriSETA", ["Animal Production", "Plant Production", "Poultry Production", "Horticulture"]),
     ("Clothing and furniture", "FP&amp;M SETA", ["Clothing, Textile, Footwear and Leather Manufacturing", "Furniture Making"]),
     ("Computers and IT", "MICT SETA", ["End User Computing", "Systems Development", "Technical Support"]),
@@ -883,7 +883,7 @@ learn = page_hero("ohs-13.webp", "A learner practising CPR on a training mannequ
       <span class="eyebrow">Register your interest</span>
       <h2 class="display h2">Be ready for the next intake</h2>
       <p class="lead mt-1">Share a few details and the field you are interested in. Registering does not guarantee a place, and there is no fee to register.</p>
-      <div class="note mt-2">{ic("info")}<p>Mbuso Management Solutions never asks for payment to apply for a learnership. Be careful of anyone who does.</p></div>
+      <div class="note mt-2">{ic("info")}<p>Be careful of anyone who asks for money to secure a learnership. If someone asks for payment in our name, check with us first on <span class="num">{PHONE_DISPLAY}</span>.</p></div>
     </div>
     <div class="panel panel-lg reveal">
       <form class="form" id="interest-form" novalidate>
