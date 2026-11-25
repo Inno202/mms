@@ -183,9 +183,9 @@ def cta(title_html, text):
       <h2 class="display h2">{title_html}</h2>
       <p>{text}</p>
     </div>
-    <div class="btn-row">
+    <div class="even-cols fit-md">
       <a class="btn btn-light" href="contact.html">Start a conversation {ic("arrow", "btn-arrow")}</a>
-      <a class="btn btn-outline-light" href="tel:{PHONE_TEL}">{ic("phone")}<span class="num">{PHONE_DISPLAY}</span></a>
+      <a class="btn btn-outline-light" href="tel:{PHONE_TEL}" aria-label="Call {PHONE_DISPLAY}"><span class="num">{PHONE_DISPLAY}</span></a>
     </div>
   </section>
 </div>
@@ -203,8 +203,48 @@ def strip_accents(html):
         html = _re.sub(r'<span class="accent">((?:(?!<span class="accent">).)*?)</span>', r'\1', html, flags=_re.S)
     return html
 
+
+# ---- Responsive images: every photo gets real dimensions, srcset and sizes
+from PIL import Image as _PILImage
+_IMG_DIR = OUT / "img"
+def _dims(name):
+    with _PILImage.open(_IMG_DIR / name) as im:
+        return im.size
+def _variants(name):
+    stem = name[:-5]
+    out = []
+    for t in (640, 1024):
+        if (_IMG_DIR / f"{stem}-{t}.webp").exists():
+            out.append((f"img/{stem}-{t}.webp", t))
+    w, _ = _dims(name)
+    out.append((f"img/{name}", w))
+    return out
+def _sizes_for(context):
+    if 'class="slide' in context or 'class="banner' in context:
+        return "100vw"
+    if 'class="zoomable' in context:
+        return "(min-width: 1024px) 25vw, 50vw"
+    if 'class="pillar' in context:
+        return "(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
+    return "(min-width: 1024px) 600px, 100vw"
+_IMG_RE = _re.compile(r'<img\b([^>]*?)\bsrc="img/([a-z0-9-]+\.webp)"([^>]*)>')
+def responsive_images(html):
+    def fix(m):
+        before, name, after = m.group(1), m.group(2), m.group(3)
+        attrs = before + after
+        attrs = _re.sub(r'\s(width|height|srcset|sizes)="[^"]*"', "", attrs)
+        w, h = _dims(name)
+        ctx = html[max(0, m.start() - 260):m.start()]
+        srcset = ", ".join(f"{u} {wd}w" for u, wd in _variants(name))
+        lazy_slide = 'data-defer' in attrs
+        attrs = attrs.replace(" data-defer", "")
+        if lazy_slide:
+            return f'<img data-src="img/{name}" data-srcset="{srcset}" sizes="{_sizes_for(ctx)}" width="{w}" height="{h}"{attrs}>'
+        return f'<img src="img/{name}" srcset="{srcset}" sizes="{_sizes_for(ctx)}" width="{w}" height="{h}"{attrs}>'
+    return _IMG_RE.sub(fix, html)
+
 def write(name, title, desc, body):
-    body = strip_accents(body)
+    body = responsive_images(strip_accents(body))
     html = head(title, desc, name) + header(name) + body + footer()
     (OUT / name).write_text(html, encoding="utf-8")
     print("wrote", name, len(html))
@@ -224,7 +264,7 @@ SLIDES = [
 ]
 slides_html = "".join(
     f'<li class="slide{" is-active" if i == 0 else ""}" data-caption="{escape(c)}" aria-hidden="{"false" if i == 0 else "true"}">'
-    f'<img src="img/{s}" alt="{escape(a)}" width="1440" height="810" {"fetchpriority=\"high\"" if i == 0 else "loading=\"lazy\""}></li>'
+    f'<img src="img/{s}" alt="{escape(a)}" {"fetchpriority=\"high\"" if i == 0 else ("loading=\"lazy\"" if i == 1 else "data-defer")}></li>'
     for i, (s, a, c) in enumerate(SLIDES))
 dots_html = "".join(
     f'<button class="dot" type="button" aria-label="Show photo {i+1} of {len(SLIDES)}" aria-current="{"true" if i == 0 else "false"}"></button>'
@@ -238,7 +278,7 @@ home = f"""<section class="hero" data-slideshow aria-roledescription="carousel" 
         <span class="hero-motto">Strategy | Training | Industrialisation</span>
         <h1 class="display hero-title"><span class="light">We develop</span> people, strategies and industries</h1>
         <p class="hero-text">Since <span class="num">2003</span>, government, state-owned enterprises, mining houses and listed companies have trusted us to plan for growth, build scarce skills and turn that training into real production.</p>
-        <div class="btn-row">
+        <div class="even-cols fit-md">
           <a class="btn btn-light" href="services.html">Explore our services {ic("arrow", "btn-arrow")}</a>
           <a class="btn btn-outline-light" href="hub.html">Visit the Hub</a>
         </div>
@@ -254,7 +294,7 @@ home = f"""<section class="hero" data-slideshow aria-roledescription="carousel" 
   </div>
 </section>
 <section class="trust section-tight" aria-label="At a glance">
-  <div class="wrap"><div>
+  <div class="wrap"><div class="trust-grid">
     <div class="trust-item"><strong>2003</strong><span>Founded, more than two decades of practice</span></div>
     <div class="trust-item"><strong>6</strong><span>Accrediting bodies: QCTO and five SETAs</span></div>
     <div class="trust-item"><strong>25</strong><span>Government, mining and corporate clients listed</span></div>
@@ -319,10 +359,10 @@ home = f"""<section class="hero" data-slideshow aria-roledescription="carousel" 
       <h2 class="display h2">A former mine site, now a place to live, learn and <span class="accent">work</span></h2>
       <p class="lead mt-1">In Umuzimuhle, Orkney, we turned a derelict mining property into a skills, engineering and manufacturing campus.</p>
       <div class="facts mt-2">
-        <div class="fact"><span class="fact-value">30</span><span class="fact-label">Classrooms</span></div>
-        <div class="fact"><span class="fact-value">1&nbsp;000</span><span class="fact-label">Beds for learners</span></div>
-        <div class="fact"><span class="fact-value">5</span><span class="fact-label">Industrial workshops</span></div>
-        <div class="fact"><span class="fact-value">20</span><span class="fact-label">Offices</span></div>
+        <div class="panel fact"><span class="fact-value">30</span><span class="fact-label">Classrooms</span></div>
+        <div class="panel fact"><span class="fact-value">1&nbsp;000</span><span class="fact-label">Beds for learners</span></div>
+        <div class="panel fact"><span class="fact-value">5</span><span class="fact-label">Industrial workshops</span></div>
+        <div class="panel fact"><span class="fact-value">20</span><span class="fact-label">Offices</span></div>
       </div>
       <a class="btn btn-primary mt-2" href="hub.html">See the Hub {ic("arrow", "btn-arrow")}</a>
     </div>
@@ -350,10 +390,10 @@ home = f"""<section class="hero" data-slideshow aria-roledescription="carousel" 
       <a class="text-link" href="impact.html">All impact stories {ic("arrow")}</a>
     </div>
     <div class="facts facts-4 reveal">
-      <div class="fact"><span class="fact-value">100+</span><span class="fact-label">Women and youth incubated at the Itireleng Textile Hub</span></div>
-      <div class="fact"><span class="fact-value">150</span><span class="fact-label">Learners from five municipalities in a SALGA water learnership</span></div>
-      <div class="fact"><span class="fact-value">60</span><span class="fact-label">Township learners supported from Grade 9 to matric</span></div>
-      <div class="fact"><span class="fact-value">2019</span><span class="fact-label">First Grade 12 matric camps hosted at the Hub</span></div>
+      <div class="panel fact"><span class="fact-value">100+</span><span class="fact-label">Women and youth incubated at the Itireleng Textile Hub</span></div>
+      <div class="panel fact"><span class="fact-value">150</span><span class="fact-label">Learners from five municipalities in a SALGA water learnership</span></div>
+      <div class="panel fact"><span class="fact-value">60</span><span class="fact-label">Township learners supported from Grade 9 to matric</span></div>
+      <div class="panel fact"><span class="fact-value">2019</span><span class="fact-label">First Grade 12 matric camps hosted at the Hub</span></div>
     </div>
   </div>
 </section>
@@ -365,9 +405,9 @@ home = f"""<section class="hero" data-slideshow aria-roledescription="carousel" 
       <p>A selection of the government, mining, finance and development partners we have worked with.</p>
     </div>
     <div class="clients reveal">
-      <div class="client-group"><h3>Mining and energy</h3><ul><li>Anglo American PLC</li><li>Harmony Gold</li><li>Gold Fields</li><li>Kopanang Gold Mine</li></ul></div>
-      <div class="client-group"><h3>Government and agencies</h3><ul><li>SALGA</li><li>National Youth Development Agency</li><li>National Skills Fund</li><li>Department of Mineral and Petroleum Resources</li></ul></div>
-      <div class="client-group"><h3>Business and foundations</h3><ul><li>Standard Bank</li><li>Nelson Mandela Foundation</li><li>Cyril Ramaphosa Foundation</li><li>Gauteng Gambling Board</li></ul></div>
+      <div class="panel client-group"><h3>Mining and energy</h3><ul><li>Anglo American PLC</li><li>Harmony Gold</li><li>Gold Fields</li><li>Kopanang Gold Mine</li></ul></div>
+      <div class="panel client-group"><h3>Government and agencies</h3><ul><li>SALGA</li><li>National Youth Development Agency</li><li>National Skills Fund</li><li>Department of Mineral and Petroleum Resources</li></ul></div>
+      <div class="panel client-group"><h3>Business and foundations</h3><ul><li>Standard Bank</li><li>Nelson Mandela Foundation</li><li>Cyril Ramaphosa Foundation</li><li>Gauteng Gambling Board</li></ul></div>
     </div>
     <p class="mt-2"><a class="text-link" href="about.html#clients">See all clients {ic("arrow")}</a></p>
   </div>
@@ -398,7 +438,7 @@ VALUES = [("Faith", "We trust that our work is on purpose and guided."),
           ("Excellence", "We deliver the highest quality and real value for money."),
           ("Respect", "We show care, consideration and kindness in every interaction."),
           ("Partnerships", "We draw on the strengths of others for a shared competitive edge.")]
-values_html = "".join(f'<div class="value"><h3 class="display h3">{t}</h3><p>{d}</p></div>' for t, d in VALUES)
+values_html = "".join(f'<div class="panel value"><h3 class="display h3">{t}</h3><p>{d}</p></div>' for t, d in VALUES)
 
 CLIENTS = [
     ("Mining and energy", ["Anglo American PLC", "Harmony Gold", "Gold Fields", "Kopanang Gold Mine", "Intasol Tailings", "Cox Energy"]),
@@ -408,7 +448,7 @@ CLIENTS = [
     ("Foundations and education", ["Nelson Mandela Foundation", "Cyril Ramaphosa Foundation", "Ikalafeng Special School"]),
     ("Business", ["Standard Bank", "MXN Development", "South African National Taxi Council (Gauteng)"]),
 ]
-clients_html = "".join(f'<div class="client-group"><h3>{g}</h3><ul>' + "".join(f"<li>{c}</li>" for c in cs) + "</ul></div>" for g, cs in CLIENTS)
+clients_html = "".join(f'<div class="panel client-group"><h3>{g}</h3><ul>' + "".join(f"<li>{c}</li>" for c in cs) + "</ul></div>" for g, cs in CLIENTS)
 
 about = page_hero("workshop-tables.webp", "Delegates at a facilitated workshop", "About us", '<span class="light">Built on more than</span> two decades of practice') + f"""
 <section class="section">
@@ -427,11 +467,11 @@ about = page_hero("workshop-tables.webp", "Delegates at a facilitated workshop",
 
 <section class="section band">
   <div class="wrap grid grid-2">
-    <div class="quote-block reveal">
+    <div class="panel panel-lg panel-fill reveal">
       <span class="eyebrow">Mission</span>
       <p class="statement">We facilitate sustainable growth by delivering industrialisation solutions that integrate human development, economic empowerment and innovative <span class="accent">technologies</span>.</p>
     </div>
-    <div class="quote-block reveal">
+    <div class="panel panel-lg panel-fill reveal">
       <span class="eyebrow">Vision</span>
       <p class="statement">A global authority on holistic <span class="accent">development</span>.</p>
     </div>
@@ -493,7 +533,7 @@ ACC = [("QCTO", ["Occupational Certificate: Plumbing Hand (Artisan)", "Plumbing 
        ("Services SETA", ["New Venture Creation"])]
 acc_rows = "".join(f'<tr><th scope="row">{b}</th><td><ul>' + "".join(f"<li>{q}</li>" for q in qs) + "</ul></td></tr>" for b, qs in ACC)
 
-services = page_hero("it-0.webp", "A learner working at a computer during training", "Services", '<span class="light">Strategy, training</span> and industrialisation') + f"""
+services = page_hero("it-0.webp", "A learner working at a computer during training", "Services", '<span class="light">What we</span> do') + f"""
 <section class="section">
   <div class="wrap">
     <p class="statement reveal">Three pillars that work alone or together, so one partner can take you <strong>from plan, to skilled people, to production</strong>.</p>
@@ -577,10 +617,10 @@ hub = page_hero("hub-model.webp", "3D model of the Itireleng Hub", "Itireleng Le
 <section class="section-tight">
   <div class="wrap">
     <div class="facts facts-4 reveal">
-      <div class="fact"><span class="fact-value">30</span><span class="fact-label">Classrooms</span></div>
-      <div class="fact"><span class="fact-value">1&nbsp;000</span><span class="fact-label">People accommodated</span></div>
-      <div class="fact"><span class="fact-value">5</span><span class="fact-label">Industrial workshops</span></div>
-      <div class="fact"><span class="fact-value">2</span><span class="fact-label">Halls, plus kitchen and recreation facilities</span></div>
+      <div class="panel fact"><span class="fact-value">30</span><span class="fact-label">Classrooms</span></div>
+      <div class="panel fact"><span class="fact-value">1&nbsp;000</span><span class="fact-label">People accommodated</span></div>
+      <div class="panel fact"><span class="fact-value">5</span><span class="fact-label">Industrial workshops</span></div>
+      <div class="panel fact"><span class="fact-value">2</span><span class="fact-label">Halls, plus kitchen and recreation facilities</span></div>
     </div>
     <p class="caption">The Hub also has an office block with 20 offices and a retail park, and sits close to a clinic.</p>
   </div>
@@ -617,9 +657,9 @@ hub = page_hero("hub-model.webp", "3D model of the Itireleng Hub", "Itireleng Le
       <p>The Hub is a platform for development institutions, SETAs and industry to roll out programmes at scale.</p>
     </div>
     <div class="grid grid-3">
-      <div class="card reveal"><h3 class="display h3">Small Enterprise Development Agency</h3><p class="muted mt-1 mb-0">MMS is a SEDA Premium Client, with support from SEDA Dr Kenneth Kaunda and the North West Province.</p></div>
-      <div class="card reveal"><h3 class="display h3">Industrial Development Corporation</h3><p class="muted mt-1 mb-0">Financial support to equip the factories at the Hub and build industrialists' competitiveness.</p></div>
-      <div class="card reveal"><h3 class="display h3">Incubators and agencies</h3><p class="muted mt-1 mb-0">Partnerships with enterprise development incubators such as Lepharo and with the Mineworkers Development Agency.</p></div>
+      <div class="panel panel-fill reveal"><h3 class="display h3">Small Enterprise Development Agency</h3><p class="muted mt-1 mb-0">MMS is a SEDA Premium Client, with support from SEDA Dr Kenneth Kaunda and the North West Province.</p></div>
+      <div class="panel panel-fill reveal"><h3 class="display h3">Industrial Development Corporation</h3><p class="muted mt-1 mb-0">Financial support to equip the factories at the Hub and build industrialists' competitiveness.</p></div>
+      <div class="panel panel-fill reveal"><h3 class="display h3">Incubators and agencies</h3><p class="muted mt-1 mb-0">Partnerships with enterprise development incubators such as Lepharo and with the Mineworkers Development Agency.</p></div>
     </div>
   </div>
 </section>
@@ -662,22 +702,22 @@ impact = page_hero("matric-camp.webp", "Matric learners during a camp", "Impact 
   <div class="wrap">
     <div class="section-head reveal"><h2 class="display h2">High-impact <span class="accent">success stories</span></h2></div>
     <div class="grid grid-2">
-      <article class="card reveal">
+      <article class="panel panel-fill reveal">
         <span class="eyebrow num">2014 to 2017</span>
         <h3 class="display h3">Mathematics, Science and English project</h3>
         <p class="muted mt-1">Our flagship project in Khuma Township, Matlosana, took 60 needy but deserving Grade 9 learners through to Grade 12 with Saturday and holiday classes. After matric, they received financial and non-financial support to study further, and most are now completing their studies.</p>
       </article>
-      <article class="card reveal">
+      <article class="panel panel-fill reveal">
         <span class="eyebrow">Since 2019</span>
         <h3 class="display h3">Grade 12 matric incubation camps</h3>
         <p class="muted mt-1">The Hub hosts matric camps for schools across the Dr Kenneth Kaunda District. The camps have created more than 200 temporary jobs and brought income to more than 10 local SMMEs.</p>
       </article>
-      <article class="card reveal">
+      <article class="panel panel-fill reveal">
         <span class="eyebrow">Itireleng Textile Hub</span>
         <h3 class="display h3">Women and youth in manufacturing</h3>
         <p class="muted mt-1">Around 100 women and youth are incubated at the Textile Hub, working towards SETA qualifications while producing to SABS standards.</p>
       </article>
-      <article class="card reveal">
+      <article class="panel panel-fill reveal">
         <span class="eyebrow">Water and energy skills</span>
         <h3 class="display h3">Learnerships with SALGA and EW SETA</h3>
         <p class="muted mt-1">150 learners from five municipalities enrolled in a one-year water treatment and reticulation learnership with SALGA, and 50 young people trained in cable jointing and termination with the Energy and Water SETA.</p>
@@ -704,7 +744,7 @@ impact = page_hero("matric-camp.webp", "Matric learners during a camp", "Impact 
     </div>
     <div class="reveal">
       <p class="lead">The Big Issue South Africa told the story of how Daddy Khuselo turned a derelict mining site into a thriving hub for learning and enterprise.</p>
-      <a class="btn btn-outline" href="https://www.bigissue.org.za/mine-to-school-conversion/" target="_blank" rel="noopener noreferrer">Read the article {ic("external")}</a>
+      <a class="btn btn-outline" href="https://www.bigissue.org.za/mine-to-school-conversion/" target="_blank" rel="noopener noreferrer">Read the article {ic("arrow", "btn-arrow")}<span class="sr-only"> (opens in a new tab)</span></a>
     </div>
   </div>
 </section>
@@ -729,24 +769,22 @@ contact = page_hero("ohs-21.webp", "Delegates around a table during training", "
         <li><span class="contact-icon">{ic("box")}</span><div><strong>Postal address</strong><address>PO Box <span class="num">12713</span>, Hatfield<br>Pretoria, <span class="num">0028</span></address></div></li>
       </ul>
     </div>
-    <div class="form-panel reveal">
+    <div class="panel panel-lg reveal">
       <form class="form" id="contact-form" novalidate>
-        <div class="form-row">
+        <div class="form-grid">
           <div><label class="field-label" for="name">Full name</label><input class="field" id="name" name="name" type="text" autocomplete="name" maxlength="80" required aria-describedby="name-error"><p class="field-error" id="name-error"></p></div>
-          <div><label class="field-label" for="organisation">Organisation <span class="opt">(optional)</span></label><input class="field" id="organisation" name="organisation" type="text" autocomplete="organization" maxlength="120" aria-describedby="organisation-error"><p class="field-error" id="organisation-error"></p></div>
+          <div><label class="field-label" for="phone">Phone <span class="opt">(optional)</span></label><input class="field num" id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="e.g. 082 123 4567" aria-describedby="phone-error"><p class="field-error" id="phone-error"></p></div>
+          <div class="span-2"><label class="field-label" for="email">Email</label><input class="field" id="email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="120" required aria-describedby="email-error"><p class="field-error" id="email-error"></p></div>
+          <div class="span-2"><label class="field-label" for="organisation">Organisation <span class="opt">(optional)</span></label><input class="field" id="organisation" name="organisation" type="text" autocomplete="organization" maxlength="120" aria-describedby="organisation-error"><p class="field-error" id="organisation-error"></p></div>
+          <div class="span-2"><label class="field-label" for="topic">What is your enquiry about?</label><select class="field" id="topic" name="topic" required aria-describedby="topic-error">{topic_opts}</select><p class="field-error" id="topic-error"></p></div>
+          <div class="span-2"><label class="field-label" for="message">Message</label><textarea class="field" id="message" name="message" rows="5" maxlength="2000" required aria-describedby="message-count message-error" data-counter="message-count"></textarea><div class="field-meta"><p class="field-error" id="message-error"></p><p class="field-help num" id="message-count" aria-live="polite">0 / 2000</p></div></div>
         </div>
-        <div class="form-row">
-          <div><label class="field-label" for="email">Email</label><input class="field" id="email" name="email" type="email" autocomplete="email" maxlength="120" required aria-describedby="email-error"><p class="field-error" id="email-error"></p></div>
-          <div><label class="field-label" for="phone">Phone <span class="opt">(optional)</span></label><input class="field num" id="phone" name="phone" type="tel" autocomplete="tel" maxlength="20" inputmode="tel" aria-describedby="phone-error"><p class="field-error" id="phone-error"></p></div>
-        </div>
-        <div><label class="field-label" for="topic">What is your enquiry about?</label><select class="field" id="topic" name="topic" required aria-describedby="topic-error">{topic_opts}</select><p class="field-error" id="topic-error"></p></div>
-        <div><label class="field-label" for="message">Message</label><textarea class="field" id="message" name="message" maxlength="2000" required aria-describedby="message-error message-help"></textarea><p class="field-help" id="message-help">Up to 2 000 characters.</p><p class="field-error" id="message-error"></p></div>
         <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
         <div>
           <label class="consent" for="consent"><input type="checkbox" id="consent" name="consent" aria-describedby="consent-error"><span>I agree that Mbuso Management Solutions may use these details to reply to my enquiry, as set out in the <a class="link" href="legal.html#privacy">privacy policy</a>.</span></label>
           <p class="field-error" id="consent-error"></p>
         </div>
-        <button class="btn btn-primary btn-block" type="submit">Prepare my email {ic("arrow", "btn-arrow")}</button>
+        <button class="btn btn-primary btn-lg btn-block" type="submit">Prepare my email {ic("arrow", "btn-arrow")}</button>
         <p class="field-help center mt-0">Your email app opens with the message ready to send. Nothing is stored on this website.</p>
       </form>
     </div>
@@ -766,7 +804,7 @@ FIELDS = [
     ("Business and safety", "Services SETA and QCTO", ["New Venture Creation", "Occupational Health and Safety"]),
 ]
 fields_html = "".join(
-    f'<article class="card reveal"><span class="eyebrow">{b}</span><h3 class="display h3">{t}</h3>'
+    f'<article class="panel panel-fill reveal"><span class="eyebrow">{b}</span><h3 class="display h3">{t}</h3>'
     + '<ul class="ticks mt-1">' + "".join(f"<li>{ic('check')}<span>{q}</span></li>" for q in qs) + "</ul></article>"
     for t, b, qs in FIELDS)
 field_opts = '<option value="" selected disabled>Choose a field</option>' + "".join(f"<option>{t.replace('&amp;','&amp;')}</option>" for t, _, _ in FIELDS) + "<option>Not sure yet</option>"
@@ -794,10 +832,10 @@ learn = page_hero("ohs-13.webp", "A learner practising CPR on a training mannequ
       <p>Whether you are starting out, already working, or running a small business, there is a route that fits.</p>
     </div>
     <div class="grid grid-2">
-      <article class="card reveal"><span class="route-icon">{ic("cap")}</span><h3 class="display h3">Learnerships and artisan training</h3><p class="muted mt-1 mb-0">Structured, accredited programmes that combine theory and workplace practice, leading to a recognised qualification.</p></article>
-      <article class="card reveal"><span class="route-icon">{ic("badge")}</span><h3 class="display h3">Recognition of Prior Learning</h3><p class="muted mt-1 mb-0">Already skilled but without a certificate? RPL assesses what you know and can do, so your experience counts towards a qualification.</p></article>
-      <article class="card reveal"><span class="route-icon">{ic("briefcase")}</span><h3 class="display h3">Work-integrated learning, reskilling and upskilling</h3><p class="muted mt-1 mb-0">Fast-track development for employees, so teams keep pace as roles and technology change.</p></article>
-      <article class="card reveal"><span class="route-icon">{ic("sprout")}</span><h3 class="display h3">Incubation and mentorship</h3><p class="muted mt-1 mb-0">Mentoring for women, youth, SMMEs and cooperatives, such as the members of the Itireleng Textile Hub, with help to reach markets and funding.</p></article>
+      <article class="panel panel-fill reveal"><span class="route-icon">{ic("cap")}</span><h3 class="display h3">Learnerships and artisan training</h3><p class="muted mt-1 mb-0">Structured, accredited programmes that combine theory and workplace practice, leading to a recognised qualification.</p></article>
+      <article class="panel panel-fill reveal"><span class="route-icon">{ic("badge")}</span><h3 class="display h3">Recognition of Prior Learning</h3><p class="muted mt-1 mb-0">Already skilled but without a certificate? RPL assesses what you know and can do, so your experience counts towards a qualification.</p></article>
+      <article class="panel panel-fill reveal"><span class="route-icon">{ic("briefcase")}</span><h3 class="display h3">Work-integrated learning, reskilling and upskilling</h3><p class="muted mt-1 mb-0">Fast-track development for employees, so teams keep pace as roles and technology change.</p></article>
+      <article class="panel panel-fill reveal"><span class="route-icon">{ic("sprout")}</span><h3 class="display h3">Incubation and mentorship</h3><p class="muted mt-1 mb-0">Mentoring for women, youth, SMMEs and cooperatives, such as the members of the Itireleng Textile Hub, with help to reach markets and funding.</p></article>
     </div>
   </div>
 </section>
@@ -845,29 +883,25 @@ learn = page_hero("ohs-13.webp", "A learner practising CPR on a training mannequ
       <span class="eyebrow">Register your interest</span>
       <h2 class="display h2">Be ready for the next intake</h2>
       <p class="lead mt-1">Share a few details and the field you are interested in. Registering does not guarantee a place, and there is no fee to register.</p>
-      <div class="proposal-note mt-2">{ic("info")}<p>Mbuso Management Solutions never asks for payment to apply for a learnership. Be careful of anyone who does.</p></div>
+      <div class="note mt-2">{ic("info")}<p>Mbuso Management Solutions never asks for payment to apply for a learnership. Be careful of anyone who does.</p></div>
     </div>
-    <div class="form-panel reveal">
+    <div class="panel panel-lg reveal">
       <form class="form" id="interest-form" novalidate>
-        <div class="form-row">
+        <div class="form-grid">
           <div><label class="field-label" for="i-name">Full name</label><input class="field" id="i-name" name="name" type="text" autocomplete="name" maxlength="80" required aria-describedby="i-name-error"><p class="field-error" id="i-name-error"></p></div>
-          <div><label class="field-label" for="i-phone">Cellphone</label><input class="field num" id="i-phone" name="phone" type="tel" autocomplete="tel" maxlength="20" inputmode="tel" required aria-describedby="i-phone-error"><p class="field-error" id="i-phone-error"></p></div>
-        </div>
-        <div class="form-row">
-          <div><label class="field-label" for="i-email">Email <span class="opt">(optional)</span></label><input class="field" id="i-email" name="email" type="email" autocomplete="email" maxlength="120" aria-describedby="i-email-error"><p class="field-error" id="i-email-error"></p></div>
-          <div><label class="field-label" for="i-town">Town or city</label><input class="field" id="i-town" name="town" type="text" autocomplete="address-level2" maxlength="60" required aria-describedby="i-town-error"><p class="field-error" id="i-town-error"></p></div>
-        </div>
-        <div class="form-row">
+          <div><label class="field-label" for="i-phone">Cellphone</label><input class="field num" id="i-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="e.g. 082 123 4567" required aria-describedby="i-phone-error"><p class="field-error" id="i-phone-error"></p></div>
+          <div class="span-2"><label class="field-label" for="i-email">Email <span class="opt">(optional)</span></label><input class="field" id="i-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="120" aria-describedby="i-email-error"><p class="field-error" id="i-email-error"></p></div>
+          <div class="span-2"><label class="field-label" for="i-town">Town or city</label><input class="field" id="i-town" name="town" type="text" autocomplete="address-level2" maxlength="60" required aria-describedby="i-town-error"><p class="field-error" id="i-town-error"></p></div>
           <div><label class="field-label" for="i-field">Field of interest</label><select class="field" id="i-field" name="field" required aria-describedby="i-field-error">{field_opts}</select><p class="field-error" id="i-field-error"></p></div>
           <div><label class="field-label" for="i-qual">Highest qualification</label><select class="field" id="i-qual" name="qualification" required aria-describedby="i-qual-error">{qual_opts}</select><p class="field-error" id="i-qual-error"></p></div>
+          <div class="span-2"><label class="field-label" for="i-message">Anything else we should know? <span class="opt">(optional)</span></label><textarea class="field" id="i-message" name="message" rows="3" maxlength="1000" aria-describedby="i-message-count i-message-error" data-counter="i-message-count"></textarea><div class="field-meta"><p class="field-error" id="i-message-error"></p><p class="field-help num" id="i-message-count" aria-live="polite">0 / 1000</p></div></div>
         </div>
-        <div><label class="field-label" for="i-message">Anything else we should know? <span class="opt">(optional)</span></label><textarea class="field" id="i-message" name="message" maxlength="1000" aria-describedby="i-message-error"></textarea><p class="field-error" id="i-message-error"></p></div>
         <div class="hp" aria-hidden="true"><label for="i-website">Leave this empty</label><input id="i-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
         <div>
           <label class="consent" for="i-consent"><input type="checkbox" id="i-consent" name="consent" aria-describedby="i-consent-error"><span>I agree that Mbuso Management Solutions may keep these details to contact me about learnerships, as set out in the <a class="link" href="legal.html#privacy">privacy policy</a>.</span></label>
           <p class="field-error" id="i-consent-error"></p>
         </div>
-        <button class="btn btn-primary btn-block" type="submit">Prepare my registration {ic("arrow", "btn-arrow")}</button>
+        <button class="btn btn-primary btn-lg btn-block" type="submit">Prepare my registration {ic("arrow", "btn-arrow")}</button>
         <p class="field-help center mt-0">Your email app opens with your details ready to send to {EMAIL}. Nothing is stored on this website.</p>
       </form>
     </div>
@@ -878,11 +912,11 @@ write("learnerships.html", "Learnerships", "Learnerships, artisan training, Reco
 
 # ------------------------------------------------------------------ LEGAL
 legal = f"""<section class="section">
-  <div class="wrap">
+  <div class="wrap wrap-read">
     <span class="eyebrow">Legal</span>
-    <h1 class="display h1">Privacy, terms and <span class="accent">cookies</span></h1>
+    <h1 class="display h1-plain">Privacy, terms and <span class="accent">cookies</span></h1>
     <p class="muted mt-1">Last updated 24 November <span class="num">2026</span>. Draft for review by Mbuso Management Solutions before publication.</p>
-    <nav class="legal-nav mt-2" aria-label="Legal sections">
+    <nav class="even-row even-min-9 mt-2" aria-label="Legal sections">
       <a class="btn btn-outline" href="#privacy">Privacy policy</a>
       <a class="btn btn-outline" href="#terms">Terms of use</a>
       <a class="btn btn-outline" href="#cookies">Cookie policy</a>
@@ -929,9 +963,9 @@ write("legal.html", "Privacy, terms and cookies", "Privacy policy, terms of use 
 notfound = f"""<section class="section">
   <div class="wrap">
     <span class="eyebrow">Page not found</span>
-    <h1 class="display h1">This page has <span class="accent">moved</span></h1>
+    <h1 class="display h1-plain">This page has <span class="accent">moved</span></h1>
     <p class="lead mt-1">The page you are looking for is not here. It may have moved when we updated our website.</p>
-    <div class="btn-row mt-2"><a class="btn btn-primary" href="index.html">Go to the home page {ic("arrow", "btn-arrow")}</a><a class="btn btn-outline" href="contact.html">Contact us</a></div>
+    <div class="even-cols fit-md mt-2"><a class="btn btn-primary" href="index.html">Go to the home page {ic("arrow", "btn-arrow")}</a><a class="btn btn-outline" href="contact.html">Contact us</a></div>
   </div>
 </section>
 """

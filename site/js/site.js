@@ -11,22 +11,47 @@
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 
+
+  /* Dialogs and the back button: opening pushes a history entry, so the phone's
+     back button closes the menu or photo viewer before it leaves the page. */
+  var closingFromHistory = false;
+  function trackDialog(dlg) {
+    if (!dlg) return;
+    dlg.addEventListener("close", function () {
+      if (!closingFromHistory && history.state && history.state.mbusoDialog === dlg.id) history.back();
+    });
+  }
+  function openDialog(dlg) {
+    if (!dlg || dlg.open) return;
+    dlg.showModal();
+    try { history.pushState({ mbusoDialog: dlg.id }, ""); } catch (e) {}
+  }
+  window.addEventListener("popstate", function () {
+    var open = document.querySelector("dialog[open]");
+    if (open) { closingFromHistory = true; open.close(); closingFromHistory = false; }
+  });
+
   /* Mobile menu */
   var menu = document.getElementById("mobile-menu");
   var menuOpen = document.querySelector("[data-menu-open]");
   if (menu && menuOpen && typeof menu.showModal === "function") {
+    trackDialog(menu);
     menuOpen.addEventListener("click", function () {
-      menu.showModal();
+      openDialog(menu);
       menuOpen.setAttribute("aria-expanded", "true");
     });
     menu.addEventListener("close", function () {
       menuOpen.setAttribute("aria-expanded", "false");
       menuOpen.focus();
     });
-    menu.querySelectorAll("[data-menu-close], nav a").forEach(function (el) {
+    menu.querySelectorAll("[data-menu-close]").forEach(function (el) {
       el.addEventListener("click", function () { menu.close(); });
     });
-    window.addEventListener("resize", function () { if (window.innerWidth >= 1040 && menu.open) menu.close(); });
+    // Following a link: close without stepping back in history, so the link wins
+    menu.querySelectorAll("nav a").forEach(function (el) {
+      el.addEventListener("click", function () { closingFromHistory = true; menu.close(); closingFromHistory = false; });
+    });
+    window.addEventListener("resize", function () { if (window.innerWidth >= 1100 && menu.open) menu.close(); });
     menu.addEventListener("click", function (e) { if (e.target === menu) menu.close(); }); // tap outside the drawer
   }
 
@@ -60,19 +85,23 @@
     var current = 0, timer = null, DELAY = 6500;
     var playing = !reduceMotion.matches;
 
+    function warm(slide) {
+      var img = slide.querySelector("img"); if (!img) return;
+      if (img.dataset.src) { img.srcset = img.dataset.srcset || ""; img.src = img.dataset.src; delete img.dataset.src; delete img.dataset.srcset; }
+      if (img.loading === "lazy") img.loading = "eager";
+    }
     function show(i) {
       current = (i + slides.length) % slides.length;
       slides.forEach(function (s, n) {
         var on = n === current;
         s.classList.toggle("is-active", on);
         s.setAttribute("aria-hidden", on ? "false" : "true");
-        if (on) { var img = s.querySelector("img"); if (img && img.loading === "lazy") img.loading = "eager"; }
+        if (on) warm(s);
       });
       dots.forEach(function (d, n) { d.setAttribute("aria-current", n === current ? "true" : "false"); });
       if (caption) caption.textContent = slides[current].getAttribute("data-caption") || "";
       // warm the next photo so the fade never shows an empty frame
-      var next = slides[(current + 1) % slides.length].querySelector("img");
-      if (next && next.loading === "lazy") next.loading = "eager";
+      warm(slides[(current + 1) % slides.length]);
     }
     function schedule() { clearTimeout(timer); if (playing) timer = setTimeout(function () { show(current + 1); schedule(); }, DELAY); }
     function setPlaying(p) {
@@ -123,6 +152,7 @@
     var vCount = viewer.querySelector(".viewer-count");
     var vCap = viewer.querySelector(".viewer-caption");
     var at = 0, opener = null;
+    trackDialog(viewer);
     function load(i) {
       at = (i + items.length) % items.length;
       var it = items[at];
@@ -136,7 +166,7 @@
       [at + 1, at - 1].forEach(function (n) { var p = new Image(); p.src = items[(n + items.length) % items.length].getAttribute("href"); });
     }
     items.forEach(function (it, i) {
-      it.addEventListener("click", function (e) { e.preventDefault(); opener = it; load(i); viewer.showModal(); viewer.querySelector(".viewer-close").focus(); });
+      it.addEventListener("click", function (e) { e.preventDefault(); opener = it; load(i); openDialog(viewer); viewer.querySelector(".viewer-close").focus(); });
     });
     viewer.querySelector(".viewer-close").addEventListener("click", function () { viewer.close(); });
     viewer.querySelector(".viewer-prev").addEventListener("click", function () { load(at - 1); });
@@ -183,12 +213,18 @@
       else if (consentErr) consentErr.textContent = "";
       if (first) { first.focus(); toast("Please check the highlighted fields.", true); return; }
       var btn = form.querySelector("button[type=submit]");
+      btn.disabled = true;
       btn.setAttribute("aria-busy", "true");
+      var spin = document.createElement("span");
+      spin.className = "spinner"; spin.setAttribute("role", "status"); spin.setAttribute("aria-label", "Preparing your message");
+      btn.appendChild(spin);
       var get = function (k) { return form.elements[k].value.trim(); };
       var m = compose(get);
       window.location.href = "mailto:mail@mbusoms.co.za?subject=" + encodeURIComponent(m.subject) + "&body=" + encodeURIComponent(m.body);
       setTimeout(function () {
+        btn.disabled = false;
         btn.removeAttribute("aria-busy");
+        if (spin.parentNode) spin.remove();
         toast("Your message is ready in your email app. If it did not open, email mail@mbusoms.co.za directly.");
       }, 600);
     });
@@ -222,6 +258,21 @@
     return { subject: "Learnership interest: " + get("field"),
       body: "Name: " + get("name") + "\nCellphone: " + get("phone") + "\nEmail: " + (get("email") || "-") + "\nTown: " + get("town") + "\nField of interest: " + get("field") + "\nHighest qualification: " + get("qualification") + "\n\n" + (get("message") || "") };
   });
+
+
+  /* Live length counters on long text ("120 / 2000"); maxlength stops typing at the limit */
+  document.querySelectorAll("textarea[data-counter]").forEach(function (ta) {
+    var out = document.getElementById(ta.getAttribute("data-counter"));
+    var max = ta.getAttribute("maxlength");
+    function upd() { if (out) out.textContent = ta.value.length + " / " + max; }
+    ta.addEventListener("input", upd); upd();
+  });
+
+
+  /* Offline copy: a service worker that always fetches the newest page first */
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol) && window.isSecureContext) {
+    try { navigator.serviceWorker.register("sw.js").catch(function () {}); } catch (e) {}
+  }
 
   /* Footer year */
   var y = document.querySelector("[data-year]");
