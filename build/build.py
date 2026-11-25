@@ -44,6 +44,11 @@ EMAIL = "mail@mbusoms.co.za"
 FB = "https://www.facebook.com/dkstrategist/"
 IG = "https://www.instagram.com/mbusomanagementsolutions/"
 
+import hashlib as _hashlib
+# Cache-busting tag: changes whenever the stylesheet or script changes, so browsers
+# never pair a new page with an old cached stylesheet.
+ASSET_V = _hashlib.sha1((OUT / "css/site.css").read_bytes() + (OUT / "js/site.js").read_bytes()).hexdigest()[:10]
+
 def head(title, desc, page):
     full = title if page == "index.html" else f"{title} | Mbuso Management Solutions"
     return f"""<!doctype html>
@@ -65,8 +70,8 @@ def head(title, desc, page):
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preload" href="fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/site.css">
-<script src="js/site.js" defer></script>
+<link rel="stylesheet" href="css/site.css?v={ASSET_V}">
+<script src="js/site.js?v={ASSET_V}" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
