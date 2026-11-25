@@ -58,5 +58,30 @@ Privacy: no analytics, tracking or cookies, and no Google Fonts or Maps embeds. 
 
 Neither form can be tested end to end, because it opens the visitor's own email app with the message filled in. To have messages arrive without the email app, connect a form service or a small server script after the proposal is accepted.
 
-## Editing
-The pages are generated from `build/build.py` (run `python3 build/build.py`). For small text changes, edit the HTML files directly.
+
+## Responsive system (25 November 2026)
+Shared pieces live in `site/css/site.css`: tokens (colour, fonts, type scale, easing, radius), plus the classes `.btn` (`btn-primary`, `btn-dark`, `btn-outline`, `btn-light`, `btn-outline-light`), `.icon-btn`, `.field`, `.panel`, `.frame`, `.even-row`, `.even-cols`, `.link` and `.num`.
+
+- The root font scales from 14px to 16px with the screen. Text sizes come from one rem scale; touch sizes are in px (buttons and fields at least 48px, icon buttons 44 x 44).
+- Every group of buttons uses `.even-cols` (one row of equal columns) or `.even-row` (wraps, and every row fills the width).
+- Forms are one column on phones and two from 640px. Long fields span both columns. Fields use 16px text so iPhones don't zoom in. Long text fields show a live counter.
+- The phone's back button closes an open menu or photo viewer before it leaves the page.
+- Photos have real dimensions, 640 and 1024px versions with `srcset`/`sizes`, and lazy loading below the first screen. Later slideshow photos load only when their turn is near.
+- `site/sw.js` keeps an offline copy. It fetches the network first, so a new release shows on the next visit. Bump `VERSION` in it on each release.
+
+Decisions that differ from the Bokamoso rules, and why:
+- **Button shape:** buttons use Mbuso's soft rectangle (10px radius), not Bokamoso's pill, so the two colleagues' sites don't look alike. The behaviour (sizes, press effect, even groups) is the same.
+- **Page titles on phones:** these start at 2.25rem (text-4xl) instead of text-5xl, because Montserrat is about 35% wider than Bokamoso's serif. At text-5xl, words like "communities" overflowed a 360px phone. From 640px the titles step up to 5xl, then 6xl, then 7xl at 1024px.
+- **Hero headline:** the headline in the hero panel reaches 7xl only from 1280px, where the panel is wide enough for "strategies" at that size.
+- **Button labels:** they use max(0.95rem, 14px), so they never drop below 14px on small phones.
+- **Services page title:** it now reads "What we do" ("Strategy, training and industrialisation" put a 17-letter word in a phone-sized title).
+- **Phone menu breakpoint:** the menu switches to the full nav bar at 1100px (previously 1040px), so the six links and the Learnerships button never crowd.
+
+Not applicable on this site: sign-in, checkout, staff dialogs, user roles, React.lazy, chips/filters and passwords. It's a static brochure site with no accounts, so "signed in as each role" could not be tested.
+
+## Build and test
+    python3 build/build.py        # regenerates the HTML pages in site/
+    python3 tests/e2e.py          # every page at 1280, 768, 390, 360 and 200% zoom: overflow, tap sizes, even groups, font floors, type scale, fields, card heights, edges, CLS, axe
+    python3 tests/interact.py     # slideshow, viewer, menu, back button, both forms, spinner, counters, deferred slides
+    python3 tests/screenshots.py  # button groups and forms at 360px and 1280px
+Needs Python 3, Playwright and Chrome. axe-core is vendored in tests/vendor.

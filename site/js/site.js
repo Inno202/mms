@@ -14,11 +14,13 @@
 
   /* Dialogs and the back button: opening pushes a history entry, so the phone's
      back button closes the menu or photo viewer before it leaves the page. */
-  var closingFromHistory = false;
   function trackDialog(dlg) {
     if (!dlg) return;
     dlg.addEventListener("close", function () {
-      if (!closingFromHistory && history.state && history.state.mbusoDialog === dlg.id) history.back();
+      // The close event fires after close() returns, so the reason travels on the element
+      var skip = dlg.dataset.skipBack === "1";
+      delete dlg.dataset.skipBack;
+      if (!skip && history.state && history.state.mbusoDialog === dlg.id) history.back();
     });
   }
   function openDialog(dlg) {
@@ -28,7 +30,7 @@
   }
   window.addEventListener("popstate", function () {
     var open = document.querySelector("dialog[open]");
-    if (open) { closingFromHistory = true; open.close(); closingFromHistory = false; }
+    if (open) { open.dataset.skipBack = "1"; open.close(); }
   });
 
   /* Mobile menu */
@@ -49,7 +51,7 @@
     });
     // Following a link: close without stepping back in history, so the link wins
     menu.querySelectorAll("nav a").forEach(function (el) {
-      el.addEventListener("click", function () { closingFromHistory = true; menu.close(); closingFromHistory = false; });
+      el.addEventListener("click", function () { menu.dataset.skipBack = "1"; menu.close(); });
     });
     window.addEventListener("resize", function () { if (window.innerWidth >= 1100 && menu.open) menu.close(); });
     menu.addEventListener("click", function (e) { if (e.target === menu) menu.close(); }); // tap outside the drawer
