@@ -531,3 +531,15 @@ textarea.field { line-height: 1.75; resize: vertical; min-height: 7.5rem; }
 .form-panel .field-help.center { margin: -0.25rem 0 0; }
 .section.section-form { padding-block: 3rem; }
 @media (min-width: 768px) { .section.section-form { padding-block: 3.5rem 5rem; } }
+
+/* Hero sized to the screen: everything in the panel shows above the fold on laptops and desktops */
+@media (min-width: 1024px) {
+  .hero { min-height: clamp(540px, calc(100svh - var(--header)), 720px); max-height: none; }
+  .hero-panel { margin-top: 2.5rem; padding: 2.5rem 2.75rem 3.25rem; }
+  .hero-title { font-size: var(--text-5xl); }
+  .hero-motto { margin-bottom: 1rem; }
+  .hero-text { margin: 1.25rem 0 1.75rem; }
+}
+@media (min-width: 1440px) and (min-height: 880px) { .hero-title { font-size: var(--text-6xl); } }
+@media (max-width: 1023px) { .hero-panel { margin-top: 8rem; padding-bottom: 5.5rem; } }
+@media (max-width: 1023px) and (max-height: 720px) { .hero-panel { margin-top: 2.5rem; padding-top: 1.5rem; } .hero-text { margin: 1rem 0 1.25rem; } }
