@@ -757,7 +757,7 @@ write("impact.html", "Impact and CSI", "New Horizons Skills Development Project,
 topics = ["Strategy and consulting", "Training and skills development", "Industrial operations and the Hub", "Partnerships and CSI", "Something else"]
 topic_opts = '<option value="" selected disabled>Choose a topic</option>' + "".join(f"<option>{t}</option>" for t in topics)
 contact = page_hero("ohs-21.webp", "Delegates around a table during training", "Contact", '<span class="light">Start a</span> conversation') + f"""
-<section class="section">
+<section class="section section-form">
   <div class="wrap contact-grid">
     <div class="reveal">
       <h2 class="display h2">Talk to our <span class="accent">team</span></h2>
@@ -769,22 +769,22 @@ contact = page_hero("ohs-21.webp", "Delegates around a table during training", "
         <li><span class="contact-icon">{ic("box")}</span><div><strong>Postal address</strong><address>PO Box <span class="num">12713</span>, Hatfield<br>Pretoria, <span class="num">0028</span></address></div></li>
       </ul>
     </div>
-    <div class="panel panel-lg reveal">
+    <div class="panel form-panel reveal">
       <form class="form" id="contact-form" novalidate>
         <div class="form-grid">
           <div><label class="field-label" for="name">Full name</label><input class="field" id="name" name="name" type="text" autocomplete="name" maxlength="80" required aria-describedby="name-error"><p class="field-error" id="name-error"></p></div>
           <div><label class="field-label" for="phone">Phone <span class="opt">(optional)</span></label><input class="field num" id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="e.g. 082 123 4567" aria-describedby="phone-error"><p class="field-error" id="phone-error"></p></div>
-          <div class="span-2"><label class="field-label" for="email">Email</label><input class="field" id="email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="120" required aria-describedby="email-error"><p class="field-error" id="email-error"></p></div>
-          <div class="span-2"><label class="field-label" for="organisation">Organisation <span class="opt">(optional)</span></label><input class="field" id="organisation" name="organisation" type="text" autocomplete="organization" maxlength="120" aria-describedby="organisation-error"><p class="field-error" id="organisation-error"></p></div>
+          <div><label class="field-label" for="email">Email</label><input class="field" id="email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="120" required aria-describedby="email-error"><p class="field-error" id="email-error"></p></div>
+          <div><label class="field-label" for="organisation">Organisation <span class="opt">(optional)</span></label><input class="field" id="organisation" name="organisation" type="text" autocomplete="organization" maxlength="120" aria-describedby="organisation-error"><p class="field-error" id="organisation-error"></p></div>
           <div class="span-2"><label class="field-label" for="topic">What is your enquiry about?</label><select class="field" id="topic" name="topic" required aria-describedby="topic-error">{topic_opts}</select><p class="field-error" id="topic-error"></p></div>
-          <div class="span-2"><label class="field-label" for="message">Message</label><textarea class="field" id="message" name="message" rows="5" maxlength="2000" required aria-describedby="message-count message-error" data-counter="message-count"></textarea><div class="field-meta"><p class="field-error" id="message-error"></p><p class="field-help num" id="message-count" aria-live="polite">0 / 2000</p></div></div>
+          <div class="span-2"><label class="field-label" for="message">Message</label><textarea class="field" id="message" name="message" rows="3" maxlength="2000" required aria-describedby="message-count message-error" data-counter="message-count"></textarea><div class="field-meta"><p class="field-error" id="message-error"></p><p class="field-help num" id="message-count" aria-live="polite">0 / 2000</p></div></div>
         </div>
         <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
         <div>
           <label class="consent" for="consent"><input type="checkbox" id="consent" name="consent" aria-describedby="consent-error"><span>I agree that Mbuso Management Solutions may use these details to reply to my enquiry, as set out in the <a class="link" href="legal.html#privacy">privacy policy</a>.</span></label>
           <p class="field-error" id="consent-error"></p>
         </div>
-        <button class="btn btn-primary btn-lg btn-block" type="submit">Prepare my email {ic("arrow", "btn-arrow")}</button>
+        <button class="btn btn-primary btn-block" type="submit">Prepare my email {ic("arrow", "btn-arrow")}</button>
         <p class="field-help center mt-0">Your email app opens with the message ready to send. Nothing is stored on this website.</p>
       </form>
     </div>
@@ -877,7 +877,7 @@ learn = page_hero("ohs-13.webp", "A learner practising CPR on a training mannequ
   </div>
 </section>
 
-<section class="section band" id="register">
+<section class="section section-form band" id="register">
   <div class="wrap contact-grid">
     <div class="reveal">
       <span class="eyebrow">Register your interest</span>
@@ -885,23 +885,23 @@ learn = page_hero("ohs-13.webp", "A learner practising CPR on a training mannequ
       <p class="lead mt-1">Share a few details and the field you are interested in. Registering does not guarantee a place, and there is no fee to register.</p>
       <div class="note mt-2">{ic("info")}<p>Be careful of anyone who asks for money to secure a learnership. If someone asks for payment in our name, check with us first on <span class="num">{PHONE_DISPLAY}</span>.</p></div>
     </div>
-    <div class="panel panel-lg reveal">
+    <div class="panel form-panel reveal">
       <form class="form" id="interest-form" novalidate>
         <div class="form-grid">
           <div><label class="field-label" for="i-name">Full name</label><input class="field" id="i-name" name="name" type="text" autocomplete="name" maxlength="80" required aria-describedby="i-name-error"><p class="field-error" id="i-name-error"></p></div>
           <div><label class="field-label" for="i-phone">Cellphone</label><input class="field num" id="i-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="e.g. 082 123 4567" required aria-describedby="i-phone-error"><p class="field-error" id="i-phone-error"></p></div>
-          <div class="span-2"><label class="field-label" for="i-email">Email <span class="opt">(optional)</span></label><input class="field" id="i-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="120" aria-describedby="i-email-error"><p class="field-error" id="i-email-error"></p></div>
-          <div class="span-2"><label class="field-label" for="i-town">Town or city</label><input class="field" id="i-town" name="town" type="text" autocomplete="address-level2" maxlength="60" required aria-describedby="i-town-error"><p class="field-error" id="i-town-error"></p></div>
+          <div><label class="field-label" for="i-email">Email <span class="opt">(optional)</span></label><input class="field" id="i-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="120" aria-describedby="i-email-error"><p class="field-error" id="i-email-error"></p></div>
+          <div><label class="field-label" for="i-town">Town or city</label><input class="field" id="i-town" name="town" type="text" autocomplete="address-level2" maxlength="60" required aria-describedby="i-town-error"><p class="field-error" id="i-town-error"></p></div>
           <div><label class="field-label" for="i-field">Field of interest</label><select class="field" id="i-field" name="field" required aria-describedby="i-field-error">{field_opts}</select><p class="field-error" id="i-field-error"></p></div>
           <div><label class="field-label" for="i-qual">Highest qualification</label><select class="field" id="i-qual" name="qualification" required aria-describedby="i-qual-error">{qual_opts}</select><p class="field-error" id="i-qual-error"></p></div>
-          <div class="span-2"><label class="field-label" for="i-message">Anything else we should know? <span class="opt">(optional)</span></label><textarea class="field" id="i-message" name="message" rows="3" maxlength="1000" aria-describedby="i-message-count i-message-error" data-counter="i-message-count"></textarea><div class="field-meta"><p class="field-error" id="i-message-error"></p><p class="field-help num" id="i-message-count" aria-live="polite">0 / 1000</p></div></div>
+          <div class="span-2"><label class="field-label" for="i-message">Anything else we should know? <span class="opt">(optional)</span></label><textarea class="field" id="i-message" name="message" rows="2" maxlength="1000" aria-describedby="i-message-count i-message-error" data-counter="i-message-count"></textarea><div class="field-meta"><p class="field-error" id="i-message-error"></p><p class="field-help num" id="i-message-count" aria-live="polite">0 / 1000</p></div></div>
         </div>
         <div class="hp" aria-hidden="true"><label for="i-website">Leave this empty</label><input id="i-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
         <div>
           <label class="consent" for="i-consent"><input type="checkbox" id="i-consent" name="consent" aria-describedby="i-consent-error"><span>I agree that Mbuso Management Solutions may keep these details to contact me about learnerships, as set out in the <a class="link" href="legal.html#privacy">privacy policy</a>.</span></label>
           <p class="field-error" id="i-consent-error"></p>
         </div>
-        <button class="btn btn-primary btn-lg btn-block" type="submit">Prepare my registration {ic("arrow", "btn-arrow")}</button>
+        <button class="btn btn-primary btn-block" type="submit">Prepare my registration {ic("arrow", "btn-arrow")}</button>
         <p class="field-help center mt-0">Your email app opens with your details ready to send to {EMAIL}. Nothing is stored on this website.</p>
       </form>
     </div>
